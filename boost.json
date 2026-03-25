@@ -1,0 +1,13 @@
+{
+    "agents": [
+        "junie"
+    ],
+    "guidelines": true,
+    "skills": [
+        "fluxui-development",
+        "livewire-development",
+        "volt-development",
+        "pest-testing",
+        "tailwindcss-development"
+    ]
+}
