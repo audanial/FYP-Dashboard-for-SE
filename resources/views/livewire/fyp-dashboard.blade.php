@@ -27,19 +27,32 @@
             'semester' => 'MARCH 2026',
             'search' => '',
             'platform' => '',
+            'domain' => '',
+            'is_ifyp' => '',
             'csvFile' => null
         ]);
 
         $projects = computed(function () {
             return FypProject::where('fyp_phase', $this->phase)
                 ->where('semester', $this->semester)
-                ->when($this->platform, function($query) {
-                    $query->where('application_type', $this->platform);
-                })
+                ->when($this->platform, fn($q) => $q->where('application_type', $this->platform))
+                ->when($this->domain, fn($q) => $q->where('domain', $this->domain))
+                ->when($this->is_ifyp !== '', fn($q) => $q->where('is_ifyp', $this->is_ifyp))
                 ->where(function($query) {
                     $query->where('student_name', 'like', '%' . $this->search . '%')
+                        ->orWhere('student_id', 'like', '%' . $this->search . '%')
                         ->orWhere('title', 'like', '%' . $this->search . '%')
-                        ->orWhere('supervisor_name', 'like', '%' . $this->search . '%');
+                        ->orWhere('supervisor_name', 'like', '%' . $this->search . '%')
+                        ->orWhere('domain', 'like', '%' . $this->search . '%')      // Search Domain
+                        ->orWhere('application_type', 'like', '%' . $this->search . '%'); // Search Platform
+
+                    // Logic to search "Industrial" or "Regular" keywords
+                    if (stripos('Industrial', $this->search) !== false) {
+                        $query->orWhere('is_ifyp', true);
+                    }
+                    if (stripos('Regular', $this->search) !== false) {
+                        $query->orWhere('is_ifyp', false);
+                    }
                 })
                 ->get();
         });
@@ -67,7 +80,7 @@
 
         <div class="p-6 bg-white dark:bg-gray-900 rounded-lg shadow">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold !text-black dark:text-white">FYP Dashboard: {{ $phase }}</h2>
+                <h2 class="text-2xl font-bold text-black! dark:text-white">FYP Dashboard: {{ $phase }}</h2>
 
                 <select wire:model.live="semester" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 !text-black">
                     <option value="OCTOBER 2025">October 2025 (Previous)</option>
@@ -81,7 +94,7 @@
                         <input wire:model.live="search"
                                type="text"
                                @input="hasText = $el.value.length > 0"
-                               placeholder="Search name, title, or supervisor..."
+                               placeholder="Search name, ID, title, domain, or type..."
                                class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 w-full text-sm !text-black pr-10">
 
                         <button x-show="hasText"
@@ -127,9 +140,12 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">No.</th>
                         <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Student Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Student ID</th>
                         <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Project Title</th>
                         <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Supervisor</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Domain</th>
                         <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Platform</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Type</th>
                     </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
@@ -137,15 +153,23 @@
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
                             <td class="px-6 py-4 text-sm !text-black">{{ $index + 1 }}</td>
                             <td class="px-6 py-4 text-sm font-medium !text-black">{{ $project->student_name }}</td>
+                            <td class="px-6 py-4 text-sm font-semibold !text-black">{{ $project->student_id }}</td>
                             <td class="px-6 py-4 text-sm !text-black">{{ $project->title }}</td>
                             <td class="px-6 py-4 text-sm !text-black">{{ $project->supervisor_name }}</td>
-                            <td class="px-6 py-4 text-sm">
-                                @if($project->application_type === 'Web App')
-                                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">Web App</span>
-                                @elseif($project->application_type === 'Mobile App')
-                                    <span class="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-bold">Mobile App</span>
+
+                            <td class="px-6 py-4 text-sm !text-black">
+                            <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">
+                                {{ $project->domain }}
+                            </span>
+                            </td>
+
+                            <td class="px-6 py-4 text-sm !text-black">{{ $project->application_type }}</td>
+
+                            <td class="px-6 py-4 text-sm !text-black">
+                                @if($project->is_ifyp)
+                                    <span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">Industrial (IFYP)</span>
                                 @else
-                                    <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-bold">{{ $project->application_type }}</span>
+                                    <span class="text-gray-400 text-xs italic">Regular</span>
                                 @endif
                             </td>
                         </tr>

@@ -17,11 +17,20 @@ return new class extends Migration
             $table->string('student_id')->unique();
             $table->string('title');
             $table->string('supervisor_name');
-            // New fields based on coordinator's info:
-            $table->enum('application_type', ['Web App', 'Mobile App', 'Desktop App', 'IoT/Hardware']);
+
+            // Category 1: Domain (Using the Enum for Medical, AI, etc.)
+            $table->enum('domain', ['Medical', 'AI', 'IoT', 'Education', 'Business', 'Others'])->default('Others');
+
+            // Category 2: Platform (Updated with your specific requirements)
+            $table->enum('application_type', ['Web App', 'Mobile App', 'PWA', 'Cross Platform', 'Desktop App', 'IoT/Hardware']);
+
+            // Category 3: IFYP Status (true = Industrial, false = Regular)
+            $table->boolean('is_ifyp')->default(false);
+
             $table->enum('fyp_phase', ['FYP 1', 'FYP 2']);
             $table->string('semester'); // e.g., "MARCH 2026"
-            $table->timestamps();
+
+            $table->timestamps(); // Only one timestamps() at the end
         });
     }
 

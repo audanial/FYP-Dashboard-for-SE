@@ -15,7 +15,9 @@ class FypProject extends Model
         'student_id',
         'title',
         'supervisor_name',
-        'application_type',
+        'domain',           // Category 1
+        'application_type', // Category 2
+        'is_ifyp',           // Category 3
         'fyp_phase',
         'semester',
     ];
