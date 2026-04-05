@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -12,16 +13,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Keeps your login user if you need it
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        //Program Coordinator
+        \App\Models\User::factory()->create([
+           'name' => 'Amir Coordinator',
+            'email' => 'pc@unikl.edu.my',
+            'password' => bcrypt('password'),
+            'role' => 'coordinator',
         ]);
 
-        // CHOP CHOP: This is the missing piece!
-        // This tells Laravel to run your FypProjectSeeder.php file.
-        $this->call([
-            FypProjectSeeder::class,
+        //Supervisor
+        \App\Models\User::factory()->create([
+           'name' => 'Dr. Umar',
+            'email' => 'umar@unikl.edu.my',
+            'password' => bcrypt('password'),
+            'role' => 'supervisor',
         ]);
+
     }
 }

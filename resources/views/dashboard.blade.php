@@ -45,8 +45,8 @@
             </div>
         </div>
 
-        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
-            <livewire:fyp-dashboard />
+        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4">
+            <livewire:fyp-projects />
         </div>
 
     </div>
