@@ -1,13 +1,16 @@
 <x-layouts::auth :title="__('Register')">
-    <div class="flex flex-col gap-6">
+    <div class="flex flex-col gap-6 bg-white p-8 rounded-xl shadow-sm">
+
+        <div class="flex justify-center">
+            <img src="{{ asset('images/UniKL Logo.jpeg') }}" alt="UniKL Logo" class="h-20 w-auto">
+        </div>
+
         <x-auth-header :title="__('Create an account')" :description="__('Enter your details below to create your account')" />
 
-        <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 
         <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
             @csrf
-            <!-- Name -->
             <flux:input
                 name="name"
                 :label="__('Name')"
@@ -19,7 +22,6 @@
                 :placeholder="__('Full name')"
             />
 
-            <!-- Email Address -->
             <flux:input
                 name="email"
                 :label="__('Email address')"
@@ -30,7 +32,15 @@
                 placeholder="email@example.com"
             />
 
-            <!-- Password -->
+            <flux:input
+                name="staff_access_code"
+                :label="__('Staff Access Code')"
+                :value="old('staff_access_code')"
+                type="text"
+                autocomplete="off"
+                placeholder="Optional staff access code"
+            />
+
             <flux:input
                 name="password"
                 :label="__('Password')"
@@ -41,7 +51,6 @@
                 viewable
             />
 
-            <!-- Confirm Password -->
             <flux:input
                 name="password_confirmation"
                 :label="__('Confirm password')"
@@ -59,7 +68,7 @@
             </div>
         </form>
 
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
+        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600">
             <span>{{ __('Already have an account?') }}</span>
             <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
         </div>

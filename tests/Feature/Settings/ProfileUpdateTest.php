@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 test('profile page is displayed', function () {
@@ -16,31 +18,31 @@ test('profile information can be updated', function () {
 
     $response = Livewire::test('pages::settings.profile')
         ->set('name', 'Test User')
-        ->set('email', 'test@example.com')
-        ->call('updateProfileInformation');
+        ->set('username', 'test_user')
+        ->call('saveProfile');
 
     $response->assertHasNoErrors();
 
     $user->refresh();
 
     expect($user->name)->toEqual('Test User');
-    expect($user->email)->toEqual('test@example.com');
-    expect($user->email_verified_at)->toBeNull();
+    expect($user->username)->toEqual('test_user');
 });
 
-test('email verification status is unchanged when email address is unchanged', function () {
+test('profile photo can be uploaded', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user);
+    Storage::fake('public');
 
     $response = Livewire::test('pages::settings.profile')
-        ->set('name', 'Test User')
-        ->set('email', $user->email)
-        ->call('updateProfileInformation');
+        ->set('profile_photo', UploadedFile::fake()->image('avatar.png'))
+        ->call('saveProfile');
 
     $response->assertHasNoErrors();
 
-    expect($user->refresh()->email_verified_at)->not->toBeNull();
+    expect($user->fresh()->profile_photo_path)->not->toBeNull();
+    Storage::disk('public')->assertExists($user->fresh()->profile_photo_path);
 });
 
 test('user can delete their account', function () {

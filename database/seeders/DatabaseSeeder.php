@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,21 +12,26 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        //Program Coordinator
-        \App\Models\User::factory()->create([
-           'name' => 'Amir Coordinator',
-            'email' => 'pc@unikl.edu.my',
-            'password' => bcrypt('password'),
-            'role' => 'coordinator',
-        ]);
+        // Program Coordinator
+        User::query()->updateOrCreate(
+            ['email' => 'pc@unikl.edu.my'],
+            [
+                'name' => 'Amir Coordinator',
+                'username' => 'pc_unikl',
+                'password' => bcrypt('password'),
+                'role' => 'admin',
+            ],
+        );
 
-        //Supervisor
-        \App\Models\User::factory()->create([
-           'name' => 'Dr. Umar',
-            'email' => 'umar@unikl.edu.my',
-            'password' => bcrypt('password'),
-            'role' => 'supervisor',
-        ]);
-
+        // Supervisor
+        User::query()->updateOrCreate(
+            ['email' => 'umar@unikl.edu.my'],
+            [
+                'name' => 'Dr. Umar',
+                'username' => 'umar_unikl',
+                'password' => bcrypt('password'),
+                'role' => 'supervisor',
+            ],
+        );
     }
 }

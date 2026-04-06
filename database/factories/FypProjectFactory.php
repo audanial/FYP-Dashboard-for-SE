@@ -15,25 +15,27 @@ class FypProjectFactory extends Factory
     public function definition(): array
     {
         $count = static::$counter++;
+        $academicPrefixes = ['Ts.', 'Dr.', 'Prof.', 'Pn.', 'En.'];
 
         $malayNames = [
             'Amir Umar Danial Bin Mohd Azmi', 'Muhammad Mukmin Muhaimin bin Nor Azmi',
             'Mohd Azrie bin Mohammad Yusof', 'Siti Nurhaliza binti Ahmad',
             'Nurul Izzah binti Anwar', 'Ahmad Faizal bin Baktiar',
-            'Wan Muhammad Amirul bin Wan Mansor', 'Farah Nabilah binti Zulkifli'
+            'Wan Muhammad Amirul bin Wan Mansor', 'Farah Nabilah binti Zulkifli',
         ];
 
         $supervisors = [
             'Ts. Tiliza binti Awang Mat', 'Dr. Ahmad Zaki bin Hamzah',
-            'Prof. Madya Dr. Rohana binti Hassan', 'Ts. Mohd Syukri bin Ali'
+            'Prof. Madya Dr. Rohana binti Hassan', 'Ts. Mohd Syukri bin Ali',
         ];
 
         return [
             // ID: 5221312001, 5221312002...
-            'student_id' => '5221312' . str_pad($count, 3, '0', STR_PAD_LEFT),
+            'student_id' => '5221312'.str_pad($count, 3, '0', STR_PAD_LEFT),
             'student_name' => $this->faker->randomElement($malayNames),
-            'title' => ucwords($this->faker->words(4, true)) . ' System',
+            'title' => ucwords($this->faker->words(4, true)).' System',
             'supervisor_name' => $this->faker->randomElement($supervisors),
+            'assessor_name' => $this->faker->randomElement($academicPrefixes).' '.$this->faker->name(),
 
             // Domain: Must match Migration exactly
             'domain' => $this->faker->randomElement(['Medical', 'AI', 'IoT', 'Education', 'Business', 'Others']),

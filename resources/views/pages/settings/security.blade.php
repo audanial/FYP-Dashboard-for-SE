@@ -9,6 +9,9 @@ use Laravel\Fortify\Fortify;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use function Livewire\Volt\layout;
+
+layout('layouts.app');
 
 new #[Title('Security settings')] class extends Component {
     use PasswordValidationRules;
@@ -23,9 +26,6 @@ new #[Title('Security settings')] class extends Component {
 
     public bool $requiresConfirmation;
 
-    /**
-     * Mount the component.
-     */
     public function mount(DisableTwoFactorAuthentication $disableTwoFactorAuthentication): void
     {
         $this->canManageTwoFactor = Features::canManageTwoFactorAuthentication();
@@ -40,9 +40,6 @@ new #[Title('Security settings')] class extends Component {
         }
     }
 
-    /**
-     * Update the password for the currently authenticated user.
-     */
     public function updatePassword(): void
     {
         try {
@@ -65,18 +62,12 @@ new #[Title('Security settings')] class extends Component {
         $this->dispatch('password-updated');
     }
 
-    /**
-     * Handle the two-factor authentication enabled event.
-     */
     #[On('two-factor-enabled')]
     public function onTwoFactorEnabled(): void
     {
         $this->twoFactorEnabled = true;
     }
 
-    /**
-     * Disable two-factor authentication for the user.
-     */
     public function disable(DisableTwoFactorAuthentication $disableTwoFactorAuthentication): void
     {
         $disableTwoFactorAuthentication(auth()->user());
@@ -130,13 +121,13 @@ new #[Title('Security settings')] class extends Component {
             </div>
         </form>
 
-        @if ($canManageTwoFactor)
+        @if ($this->canManageTwoFactor)
             <section class="mt-12">
                 <flux:heading>{{ __('Two-factor authentication') }}</flux:heading>
                 <flux:subheading>{{ __('Manage your two-factor authentication settings') }}</flux:subheading>
 
                 <div class="flex flex-col w-full mx-auto space-y-6 text-sm" wire:cloak>
-                    @if ($twoFactorEnabled)
+                    @if ($this->twoFactorEnabled)
                         <div class="space-y-4">
                             <flux:text>
                                 {{ __('You will be prompted for a secure, random pin during login, which you can retrieve from the TOTP-supported application on your phone.') }}
@@ -151,7 +142,7 @@ new #[Title('Security settings')] class extends Component {
                                 </flux:button>
                             </div>
 
-                            <livewire:pages::settings.two-factor.recovery-codes :$requiresConfirmation />
+                            <livewire:pages::settings.two-factor.recovery-codes :requires-confirmation="$this->requiresConfirmation" />
                         </div>
                     @else
                         <div class="space-y-4">
@@ -168,7 +159,7 @@ new #[Title('Security settings')] class extends Component {
                                 </flux:button>
                             </flux:modal.trigger>
 
-                            <livewire:pages::settings.two-factor-setup-modal :requires-confirmation="$requiresConfirmation" />
+                            <livewire:pages::settings.two-factor-setup-modal :requires-confirmation="$this->requiresConfirmation" />
                         </div>
                     @endif
                 </div>

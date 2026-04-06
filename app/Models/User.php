@@ -9,15 +9,30 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-#[Fillable(['name', 'email', 'password', 'role'])]
+#[Fillable(['name', 'email', 'password', 'role', 'username', 'profile_photo_path'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
+
+    public function hasRole(string ...$roles): bool
+    {
+        return in_array($this->role, $roles, true);
+    }
+
+    public function dashboardRouteName(): string
+    {
+        return match ($this->role) {
+            'admin' => 'admin.dashboard',
+            'supervisor' => 'supervisor.dashboard',
+            default => 'dashboard',
+        };
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -42,5 +57,19 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    public function profilePhotoUrl(): ?string
+    {
+        if (! $this->profile_photo_path) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->profile_photo_path);
+    }
+
+    public function displayUsername(): string
+    {
+        return $this->username ?: Str::before($this->email, '@');
     }
 }

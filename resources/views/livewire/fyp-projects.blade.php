@@ -26,6 +26,7 @@
                         ->orWhere('student_id', 'like', '%' . $this->search . '%')
                         ->orWhere('title', 'like', '%' . $this->search . '%')
                         ->orWhere('supervisor_name', 'like', '%' . $this->search . '%')
+                        ->orWhere('assessor_name', 'like', '%' . $this->search . '%')
                         ->orWhere('domain', 'like', '%' . $this->search . '%')      // Search Domain
                         ->orWhere('application_type', 'like', '%' . $this->search . '%'); // Search Platform
 
@@ -52,7 +53,8 @@
                     'student_id' => $row[1],
                     'title' => $row[2],
                     'supervisor_name' => $row[3],
-                    'application_type' => $row[4] ?? 'Web App',
+                    'assessor_name' => $row[4] ?? null,
+                    'application_type' => $row[5] ?? 'Web App',
                     'fyp_phase' => $this->phase,
                     'semester' => $this->semester,
                 ]);
@@ -126,6 +128,7 @@
                         <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Student ID</th>
                         <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Project Title</th>
                         <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Supervisor</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Assessor</th>
                         <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Domain</th>
                         <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Platform</th>
                         <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Type</th>
@@ -139,6 +142,7 @@
                             <td class="px-6 py-4 text-sm font-semibold !text-black">{{ $project->student_id }}</td>
                             <td class="px-6 py-4 text-sm !text-black">{{ $project->title }}</td>
                             <td class="px-6 py-4 text-sm !text-black">{{ $project->supervisor_name }}</td>
+                            <td class="px-6 py-4 text-sm !text-black">{{ $project->assessor_name ?? '-' }}</td>
 
                             <td class="px-6 py-4 text-sm !text-black">
                             <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">
@@ -158,7 +162,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-10 text-center !text-black">
+                            <td colspan="9" class="px-6 py-10 text-center !text-black">
                                 No students found for <strong>{{ $phase }}</strong> in <strong>{{ $semester }}</strong>.
                             </td>
                         </tr>
