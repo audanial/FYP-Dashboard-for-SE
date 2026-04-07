@@ -1,6 +1,7 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <?php
         use App\Models\FypProject;
+        use Illuminate\Support\Facades\Auth;
         use function Livewire\Volt\{state, computed, usesFileUploads};
 
         usesFileUploads();
@@ -14,6 +15,15 @@
             'is_ifyp' => '',
             'csvFile' => null
         ]);
+
+        $platforms = computed(function () {
+            return FypProject::query()
+                ->whereNotNull('application_type')
+                ->where('application_type', '!=', '')
+                ->distinct()
+                ->orderBy('application_type')
+                ->pluck('application_type');
+        });
 
         $projects = computed(function () {
             return FypProject::where('fyp_phase', $this->phase)
@@ -93,19 +103,22 @@
 
                     <select wire:model.live="platform" class="rounded-md border-gray-300 shadow-sm !text-black text-sm min-w-[140px]">
                         <option value="">All Platforms</option>
-                        <option value="Web App">Web App</option>
-                        <option value="Mobile App">Mobile App</option>
+                        @foreach ($this->platforms as $platformOption)
+                            <option value="{{ $platformOption }}">{{ $platformOption }}</option>
+                        @endforeach
                     </select>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <input type="file" wire:model="csvFile"
-                           class="text-xs text-gray-500 file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                    <button wire:click="importCsv"
-                            class="bg-indigo-600 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-indigo-700 transition">
-                        Import CSV
-                    </button>
-                </div>
+                @if (Auth::user()?->role === 'coordinator')
+                    <div class="flex items-center gap-2">
+                        <input type="file" wire:model="csvFile"
+                               class="text-xs text-gray-500 file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                        <button wire:click="importCsv"
+                                class="bg-indigo-600 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-indigo-700 transition">
+                            Import CSV
+                        </button>
+                    </div>
+                @endif
             </div>
 
             <div class="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg mb-6 max-w-md">

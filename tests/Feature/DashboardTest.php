@@ -104,6 +104,19 @@ test('coordinator dashboard shows role-aware sidebar navigation', function () {
         ->assertSee('Manage Users');
 });
 
+test('only coordinators see dashboard csv import controls', function () {
+    $coordinator = User::factory()->create([
+        'role' => 'coordinator',
+    ]);
+
+    $this->actingAs($coordinator);
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Import CSV')
+        ->assertSee('type="file"', false);
+});
+
 test('supervisor dashboard shows role-aware sidebar navigation', function () {
     $user = User::factory()->create([
         'role' => 'supervisor',
@@ -116,6 +129,32 @@ test('supervisor dashboard shows role-aware sidebar navigation', function () {
         ->assertSee(route('dashboard'), false)
         ->assertSee(route('supervisor.students'), false)
         ->assertSee('My Students');
+});
+
+test('supervisors do not see dashboard csv import controls', function () {
+    $user = User::factory()->create([
+        'role' => 'supervisor',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertDontSee('Import CSV')
+        ->assertDontSee('type="file"', false);
+});
+
+test('students do not see dashboard csv import controls', function () {
+    $user = User::factory()->create([
+        'role' => 'student',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertDontSee('Import CSV')
+        ->assertDontSee('type="file"', false);
 });
 
 test('coordinator can access the user management page', function () {
@@ -167,4 +206,30 @@ test('dashboard shows the assessor column and values', function () {
     $response->assertOk();
     $response->assertSee('Assessor');
     $response->assertSee($project->assessor_name);
+});
+
+test('dashboard platform filter shows distinct app types from projects', function () {
+    $user = User::factory()->create([
+        'role' => 'coordinator',
+    ]);
+
+    FypProject::factory()->create([
+        'application_type' => 'Cross Platform',
+    ]);
+
+    FypProject::factory()->create([
+        'application_type' => 'Desktop App',
+    ]);
+
+    FypProject::factory()->create([
+        'application_type' => 'Cross Platform',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('All Platforms')
+        ->assertSee('Cross Platform')
+        ->assertSee('Desktop App');
 });
