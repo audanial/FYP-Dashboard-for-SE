@@ -18,18 +18,18 @@ test('home redirects authenticated users to the dashboard', function () {
     $response->assertRedirect(route('dashboard'));
 });
 
-test('home redirects authenticated admins to the admin dashboard', function () {
+test('home redirects authenticated coordinators to the dashboard', function () {
     $user = User::factory()->create([
-        'role' => 'admin',
+        'role' => 'coordinator',
     ]);
     $this->actingAs($user);
 
     $response = $this->get(route('home'));
 
-    $response->assertRedirect(route('admin.dashboard'));
+    $response->assertRedirect(route('dashboard'));
 });
 
-test('home redirects authenticated supervisors to the supervisor dashboard', function () {
+test('home redirects authenticated supervisors to the dashboard', function () {
     $user = User::factory()->create([
         'role' => 'supervisor',
     ]);
@@ -37,7 +37,7 @@ test('home redirects authenticated supervisors to the supervisor dashboard', fun
 
     $response = $this->get(route('home'));
 
-    $response->assertRedirect(route('supervisor.dashboard'));
+    $response->assertRedirect(route('dashboard'));
 });
 
 test('guests are redirected to the login page', function () {
@@ -55,6 +55,103 @@ test('authenticated users can visit the dashboard', function () {
     $response->assertDontSee('<html lang="en" class="dark">', false);
 });
 
+test('coordinators can visit the dashboard route', function () {
+    $user = User::factory()->create([
+        'role' => 'coordinator',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('dashboard'))->assertOk();
+});
+
+test('supervisors can visit the dashboard route', function () {
+    $user = User::factory()->create([
+        'role' => 'supervisor',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('dashboard'))->assertOk();
+});
+
+test('student dashboard shows minimal sidebar navigation', function () {
+    $user = User::factory()->create([
+        'role' => 'student',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Navigation')
+        ->assertSee(route('dashboard'), false)
+        ->assertSee(route('student.logbook'), false)
+        ->assertSee('My Logbook');
+});
+
+test('coordinator dashboard shows role-aware sidebar navigation', function () {
+    $user = User::factory()->create([
+        'role' => 'coordinator',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee(route('dashboard'), false)
+        ->assertSee(route('admin.users'), false)
+        ->assertSee('Manage Users');
+});
+
+test('supervisor dashboard shows role-aware sidebar navigation', function () {
+    $user = User::factory()->create([
+        'role' => 'supervisor',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee(route('dashboard'), false)
+        ->assertSee(route('supervisor.students'), false)
+        ->assertSee('My Students');
+});
+
+test('coordinator can access the user management page', function () {
+    $user = User::factory()->create([
+        'role' => 'coordinator',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('admin.users'))
+        ->assertOk()
+        ->assertSee('User Role Management');
+});
+
+test('students are redirected away from the user management page', function () {
+    $user = User::factory()->create([
+        'role' => 'student',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('admin.users'))
+        ->assertRedirect(route('dashboard'));
+});
+
+test('supervisors are redirected away from the user management page', function () {
+    $user = User::factory()->create([
+        'role' => 'supervisor',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('admin.users'))
+        ->assertRedirect(route('dashboard'));
+});
+
 test('dashboard shows the assessor column and values', function () {
     $user = User::factory()->create();
     $project = FypProject::factory()->create([
@@ -70,22 +167,4 @@ test('dashboard shows the assessor column and values', function () {
     $response->assertOk();
     $response->assertSee('Assessor');
     $response->assertSee($project->assessor_name);
-});
-
-test('students cannot access the admin dashboard', function () {
-    $user = User::factory()->create([
-        'role' => 'student',
-    ]);
-    $this->actingAs($user);
-
-    $this->get(route('admin.dashboard'))->assertForbidden();
-});
-
-test('supervisors cannot access the student dashboard', function () {
-    $user = User::factory()->create([
-        'role' => 'supervisor',
-    ]);
-    $this->actingAs($user);
-
-    $this->get(route('dashboard'))->assertForbidden();
 });

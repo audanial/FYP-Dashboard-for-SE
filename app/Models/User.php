@@ -27,11 +27,7 @@ class User extends Authenticatable
 
     public function dashboardRouteName(): string
     {
-        return match ($this->role) {
-            'admin' => 'admin.dashboard',
-            'supervisor' => 'supervisor.dashboard',
-            default => 'dashboard',
-        };
+        return 'dashboard';
     }
 
     /**

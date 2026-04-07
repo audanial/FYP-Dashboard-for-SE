@@ -102,7 +102,7 @@ new #[Title('My Profile')] class extends Component {
         <flux:button
             variant="ghost"
             icon="arrow-left"
-            :href="route('dashboard')"
+            :href="route(Auth::user()->dashboardRouteName())"
             wire:navigate
         >
             {{ __('Back to Dashboard') }}
@@ -126,7 +126,7 @@ new #[Title('My Profile')] class extends Component {
                     <div class="flex flex-wrap items-center">
                         <h1 class="text-3xl font-semibold text-zinc-900">{{ $this->name }}</h1>
                         @switch(auth()->user()->role)
-                            @case('admin')
+                            @case('coordinator')
                                 <span class="ml-2 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">Program Coordinator</span>
                                 @break
                             @case('supervisor')

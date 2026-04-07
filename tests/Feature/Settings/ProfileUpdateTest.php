@@ -11,6 +11,42 @@ test('profile page is displayed', function () {
     $this->get(route('profile.edit'))->assertOk();
 });
 
+test('profile page back button points students to the student dashboard', function () {
+    $user = User::factory()->create([
+        'role' => 'student',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('profile.edit'))
+        ->assertOk()
+        ->assertSee(route('dashboard'), false);
+});
+
+test('profile page back button points coordinators to the dashboard', function () {
+    $user = User::factory()->create([
+        'role' => 'coordinator',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('profile.edit'))
+        ->assertOk()
+        ->assertSee(route('dashboard'), false);
+});
+
+test('profile page back button points supervisors to the dashboard', function () {
+    $user = User::factory()->create([
+        'role' => 'supervisor',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->get(route('profile.edit'))
+        ->assertOk()
+        ->assertSee(route('dashboard'), false);
+});
+
 test('profile information can be updated', function () {
     $user = User::factory()->create();
 
