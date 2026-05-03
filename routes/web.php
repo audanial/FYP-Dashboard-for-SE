@@ -20,6 +20,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:coordinator,supervisor,student')
         ->name('dashboard');
 
+    Route::view('fyp-projects', 'fyp-projects-page')
+        ->middleware('role:coordinator,supervisor,student')
+        ->name('fyp.projects');
+
     Route::get('student/logbook', function () {
         $container = Container::getInstance();
 

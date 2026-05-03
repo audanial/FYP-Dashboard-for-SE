@@ -28,6 +28,15 @@
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
 
+                <flux:sidebar.item
+                    icon="table-cells"
+                    :href="route('fyp.projects')"
+                    :current="request()->routeIs('fyp.projects')"
+                    wire:navigate
+                >
+                    {{ __('FYP Projects') }}
+                </flux:sidebar.item>
+
                 @if ($userRole === 'coordinator')
                     <flux:sidebar.item
                         icon="users"
