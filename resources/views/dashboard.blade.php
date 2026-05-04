@@ -45,5 +45,7 @@
             </div>
         </div>
 
+        <livewire:analytics-charts />
+
     </div>
 </x-layouts::app>
