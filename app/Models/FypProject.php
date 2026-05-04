@@ -13,6 +13,13 @@ class FypProject extends Model
     protected $table = 'fyp_projects';
 
     // These are the fields your CSV Import and Dashboard will use
+    protected $attributes = [
+        'domain'           => 'Others',
+        'application_type' => 'Unknown',
+        'is_ifyp'          => false,
+        'phase'            => 'FYP 1',
+    ];
+
     protected $fillable = [
         'student_name',
         'student_id',
@@ -23,6 +30,7 @@ class FypProject extends Model
         'application_type', // Category 2
         'is_ifyp',           // Category 3
         'fyp_phase',
+        'phase',
         'semester',
     ];
 }
