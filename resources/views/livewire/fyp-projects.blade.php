@@ -1,7 +1,9 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <?php
         use App\Models\FypProject;
+        use App\Services\CsvHeaderResolver;
         use Illuminate\Support\Facades\Auth;
+        use Illuminate\Support\Facades\DB;
         use function Livewire\Volt\{state, computed, usesFileUploads};
 
         usesFileUploads();
@@ -13,7 +15,13 @@
             'platform' => '',
             'domain' => '',
             'is_ifyp' => '',
-            'csvFile' => null
+            'csvFile' => null,
+            'importError' => null,
+            'importReport' => null,
+            'importedCount' => 0,
+            'skippedCount' => 0,
+            'failedCount' => 0,
+            'skippedDuplicates' => [],
         ]);
 
         $platforms = computed(function () {
@@ -51,24 +59,118 @@
                 ->get();
         });
 
+        $normalizeApplicationType = function (string $raw): string {
+            $v = strtolower(trim($raw));
+            return match (true) {
+                in_array($v, ['web', 'web app', 'webapp', 'website'])                      => 'Web App',
+                in_array($v, ['mobile', 'mobile app', 'android', 'ios'])                   => 'Mobile App',
+                $v === 'pwa'                                                                => 'PWA',
+                in_array($v, ['cross', 'cross platform', 'cross-platform'])                => 'Cross Platform',
+                in_array($v, ['desktop', 'desktop app'])                                   => 'Desktop App',
+                in_array($v, ['iot', 'hardware', 'iot/hardware', 'arduino', 'raspberry'])  => 'IoT/Hardware',
+                default                                                                     => 'Web App',
+            };
+        };
+
+        $normalizeDomain = function (string $raw): string {
+            $v = strtolower(trim($raw));
+            return match (true) {
+                in_array($v, ['ai', 'artificial intelligence', 'machine learning'])        => 'AI',
+                in_array($v, ['medical', 'health', 'healthcare', 'hospital'])              => 'Medical',
+                in_array($v, ['iot', 'internet of things'])                                => 'IoT',
+                in_array($v, ['education', 'e-learning', 'learning'])                     => 'Education',
+                in_array($v, ['business', 'finance', 'marketing'])                        => 'Business',
+                default                                                                     => 'Others',
+            };
+        };
+
         $importCsv = function () {
+            $this->importError = null;
+            $this->importReport = null;
+            $this->importedCount = 0;
+            $this->skippedCount = 0;
+            $this->failedCount = 0;
+            $this->skippedDuplicates = [];
+
+            // Change to 'strict' to reject any duplicate, 'update' to upsert.
+            $duplicateMode = 'skip'; // 'strict' | 'skip' | 'update'
+
             $this->validate(['csvFile' => 'required|mimes:csv,txt|max:1024']);
             $path = $this->csvFile->getRealPath();
             $data = array_map('str_getcsv', file($path));
 
-            foreach ($data as $index => $row) {
-                if ($index === 0) continue;
-                FypProject::create([
-                    'student_name' => $row[0],
-                    'student_id' => $row[1],
-                    'title' => $row[2],
-                    'supervisor_name' => $row[3],
-                    'assessor_name' => $row[4] ?? null,
-                    'application_type' => $row[5] ?? 'Web App',
-                    'fyp_phase' => $this->phase,
-                    'semester' => $this->semester,
-                ]);
+            if (empty($data)) {
+                $this->reset('csvFile');
+                return;
             }
+
+            $resolver = app(CsvHeaderResolver::class);
+            $map = $resolver->resolve($data[0]);
+            $totalRows = count($data) - 1;
+
+            try {
+                DB::transaction(function () use ($data, $map, $duplicateMode) {
+                    foreach ($data as $index => $row) {
+                        if ($index === 0) continue;
+
+                        $studentId = $row[1];
+
+                        $rawDomain = ($map['domain'] !== null && isset($row[$map['domain']]) && trim($row[$map['domain']]) !== '')
+                            ? trim($row[$map['domain']])
+                            : '';
+
+                        $rawApplicationType = ($map['application_type'] !== null && isset($row[$map['application_type']]) && trim($row[$map['application_type']]) !== '')
+                            ? trim($row[$map['application_type']])
+                            : '';
+
+                        $fields = [
+                            'student_name'     => $row[0],
+                            'student_id'       => $studentId,
+                            'title'            => $row[2],
+                            'supervisor_name'  => $row[3],
+                            'assessor_name'    => $row[4] ?? null,
+                            'domain'           => $this->normalizeDomain($rawDomain),
+                            'application_type' => $this->normalizeApplicationType($rawApplicationType),
+                            'fyp_phase'        => $this->phase,
+                            'semester'         => $this->semester,
+                        ];
+
+                        if ($duplicateMode === 'update') {
+                            FypProject::updateOrCreate(['student_id' => $studentId], $fields);
+                            $this->importedCount++;
+                            continue;
+                        }
+
+                        if (FypProject::where('student_id', $studentId)->exists()) {
+                            if ($duplicateMode === 'strict') {
+                                throw_if(true, \RuntimeException::class, "Duplicate student ID found: {$studentId}. Import cancelled.");
+                            }
+                            $this->skippedDuplicates[] = $studentId;
+                            $this->skippedCount++;
+                            continue;
+                        }
+
+                        FypProject::create($fields);
+                        $this->importedCount++;
+                    }
+                });
+            } catch (\Throwable $e) {
+                $this->importReport = null;
+                $this->importError = ($e instanceof \RuntimeException)
+                    ? $e->getMessage()
+                    : 'Import failed. No data was saved. Please check your CSV format.';
+                $this->reset('csvFile');
+                return;
+            }
+
+            $this->importReport = [
+                'total'      => $totalRows,
+                'imported'   => $this->importedCount,
+                'skipped'    => $this->skippedCount,
+                'failed'     => $this->failedCount,
+                'duplicates' => $this->skippedDuplicates,
+            ];
+
             $this->reset('csvFile');
         };
         ?>
@@ -110,13 +212,42 @@
                 </div>
 
                 @if (Auth::user()?->role === 'coordinator')
-                    <div class="flex items-center gap-2">
-                        <input type="file" wire:model="csvFile"
-                               class="text-xs text-gray-500 file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                        <button wire:click="importCsv"
-                                class="bg-indigo-600 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-indigo-700 transition">
-                            Import CSV
-                        </button>
+                    <div class="flex flex-col items-end gap-1">
+                        <div class="flex items-center gap-2">
+                            <input type="file" wire:model="csvFile"
+                                   class="text-xs text-gray-500 file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                            <button wire:click="importCsv"
+                                    class="bg-indigo-600 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-indigo-700 transition">
+                                Import CSV
+                            </button>
+                        </div>
+                        @if ($importError)
+                            <p class="text-xs text-red-600 font-medium">{{ $importError }}</p>
+                        @endif
+                        @if ($importReport)
+                            <div class="mt-1 text-right text-xs space-y-0.5">
+                                <p class="font-semibold text-green-600">Import completed successfully</p>
+                                <p class="text-gray-500 dark:text-gray-400">Total rows: {{ $importReport['total'] }}</p>
+                                <p class="text-green-600">Imported: {{ $importReport['imported'] }}</p>
+                                @if ($importReport['skipped'] > 0)
+                                    <p class="text-yellow-600">Skipped: {{ $importReport['skipped'] }}</p>
+                                @endif
+                                @if ($importReport['failed'] > 0)
+                                    <p class="text-red-600">Failed: {{ $importReport['failed'] }}</p>
+                                @endif
+                                @if (!empty($importReport['duplicates']))
+                                    <div x-data="{ open: false }">
+                                        <button @click="open = !open"
+                                                class="text-yellow-600 underline hover:text-yellow-800 transition-colors">
+                                            View skipped IDs ({{ count($importReport['duplicates']) }})
+                                        </button>
+                                        <p x-show="open" x-transition class="text-yellow-700 break-words max-w-xs">
+                                            {{ implode(', ', $importReport['duplicates']) }}
+                                        </p>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 @endif
             </div>
