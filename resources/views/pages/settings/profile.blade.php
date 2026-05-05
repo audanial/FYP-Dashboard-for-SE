@@ -127,7 +127,7 @@ new #[Title('My Profile')] class extends Component {
                         <h1 class="text-3xl font-semibold text-zinc-900">{{ $this->name }}</h1>
                         @switch(auth()->user()->role)
                             @case('coordinator')
-                                <span class="ml-2 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">Program Coordinator</span>
+                                <span class="ml-2 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">FYP Coordinator</span>
                                 @break
                             @case('supervisor')
                                 <span class="ml-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">Supervisor</span>
