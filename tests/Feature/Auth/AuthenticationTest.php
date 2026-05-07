@@ -29,9 +29,9 @@ test('users can authenticate using the login screen', function () {
     $this->assertAuthenticated();
 });
 
-test('admins are redirected to the admin dashboard after login', function () {
+test('coordinators are redirected to the dashboard after login', function () {
     $user = User::factory()->create([
-        'role' => 'admin',
+        'role' => 'coordinator',
     ]);
 
     $response = $this->post(route('login.store'), [
@@ -41,12 +41,12 @@ test('admins are redirected to the admin dashboard after login', function () {
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect(route('admin.dashboard', absolute: false));
+        ->assertRedirect(route('dashboard', absolute: false));
 
     $this->assertAuthenticated();
 });
 
-test('supervisors are redirected to the supervisor dashboard after login', function () {
+test('supervisors are redirected to the dashboard after login', function () {
     $user = User::factory()->create([
         'role' => 'supervisor',
     ]);
@@ -58,7 +58,7 @@ test('supervisors are redirected to the supervisor dashboard after login', funct
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect(route('supervisor.dashboard', absolute: false));
+        ->assertRedirect(route('dashboard', absolute: false));
 
     $this->assertAuthenticated();
 });

@@ -85,6 +85,8 @@
         };
 
         $importCsv = function () {
+            abort_unless(Auth::user()?->role === 'coordinator', 403);
+
             $this->importError = null;
             $this->importReport = null;
             $this->importedCount = 0;
@@ -106,6 +108,16 @@
 
             $resolver = app(CsvHeaderResolver::class);
             $map = $resolver->resolve($data[0]);
+
+            $requiredFields = ['student_name', 'student_id', 'title', 'supervisor_name'];
+            $missing = array_filter($requiredFields, fn($f) => $map[$f] === null);
+            if (!empty($missing)) {
+                $labels = array_map(fn($f) => str_replace('_', ' ', $f), $missing);
+                $this->importError = 'Missing required CSV columns: ' . implode(', ', $labels) . '. Please check your CSV headers.';
+                $this->reset('csvFile');
+                return;
+            }
+
             $totalRows = count($data) - 1;
 
             try {
@@ -113,7 +125,13 @@
                     foreach ($data as $index => $row) {
                         if ($index === 0) continue;
 
-                        $studentId = $row[1];
+                        $studentId      = trim($row[$map['student_id']] ?? '');
+                        $studentName    = trim($row[$map['student_name']] ?? '');
+                        $title          = trim($row[$map['title']] ?? '');
+                        $supervisorName = trim($row[$map['supervisor_name']] ?? '');
+                        $assessorName   = ($map['assessor_name'] !== null && isset($row[$map['assessor_name']]) && trim($row[$map['assessor_name']]) !== '')
+                            ? trim($row[$map['assessor_name']])
+                            : null;
 
                         $rawDomain = ($map['domain'] !== null && isset($row[$map['domain']]) && trim($row[$map['domain']]) !== '')
                             ? trim($row[$map['domain']])
@@ -124,11 +142,11 @@
                             : '';
 
                         $fields = [
-                            'student_name'     => $row[0],
+                            'student_name'     => $studentName,
                             'student_id'       => $studentId,
-                            'title'            => $row[2],
-                            'supervisor_name'  => $row[3],
-                            'assessor_name'    => $row[4] ?? null,
+                            'title'            => $title,
+                            'supervisor_name'  => $supervisorName,
+                            'assessor_name'    => $assessorName,
                             'domain'           => $this->normalizeDomain($rawDomain),
                             'application_type' => $this->normalizeApplicationType($rawApplicationType),
                             'fyp_phase'        => $this->phase,

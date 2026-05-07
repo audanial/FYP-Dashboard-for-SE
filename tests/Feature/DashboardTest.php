@@ -104,14 +104,14 @@ test('coordinator dashboard shows role-aware sidebar navigation', function () {
         ->assertSee('Manage Users');
 });
 
-test('only coordinators see dashboard csv import controls', function () {
+test('only coordinators see csv import controls on the fyp projects page', function () {
     $coordinator = User::factory()->create([
         'role' => 'coordinator',
     ]);
 
     $this->actingAs($coordinator);
 
-    $this->get(route('dashboard'))
+    $this->get(route('fyp.projects'))
         ->assertOk()
         ->assertSee('Import CSV')
         ->assertSee('type="file"', false);
@@ -191,7 +191,7 @@ test('supervisors are redirected away from the user management page', function (
         ->assertRedirect(route('dashboard'));
 });
 
-test('dashboard shows the assessor column and values', function () {
+test('fyp projects page shows the assessor column and values', function () {
     $user = User::factory()->create();
     $project = FypProject::factory()->create([
         'fyp_phase' => 'FYP 1',
@@ -201,14 +201,14 @@ test('dashboard shows the assessor column and values', function () {
 
     $this->actingAs($user);
 
-    $response = $this->get(route('dashboard'));
+    $response = $this->get(route('fyp.projects'));
 
     $response->assertOk();
     $response->assertSee('Assessor');
     $response->assertSee($project->assessor_name);
 });
 
-test('dashboard platform filter shows distinct app types from projects', function () {
+test('fyp projects page platform filter shows distinct app types from projects', function () {
     $user = User::factory()->create([
         'role' => 'coordinator',
     ]);
@@ -227,7 +227,7 @@ test('dashboard platform filter shows distinct app types from projects', functio
 
     $this->actingAs($user);
 
-    $this->get(route('dashboard'))
+    $this->get(route('fyp.projects'))
         ->assertOk()
         ->assertSee('All Platforms')
         ->assertSee('Cross Platform')

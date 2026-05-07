@@ -16,13 +16,15 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')
-        ->middleware('role:coordinator,supervisor,student')
-        ->name('dashboard');
 
+    // ✅ FIXED: FYP Projects moved back inside auth + role protection
     Route::view('fyp-projects', 'fyp-projects-page')
         ->middleware('role:coordinator,supervisor,student')
         ->name('fyp.projects');
+
+    Route::view('dashboard', 'dashboard')
+        ->middleware('role:coordinator,supervisor,student')
+        ->name('dashboard');
 
     Route::get('student/logbook', function () {
         $container = Container::getInstance();
@@ -63,6 +65,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })
         ->name('admin.users');
+
 });
 
 require __DIR__.'/auth.php';

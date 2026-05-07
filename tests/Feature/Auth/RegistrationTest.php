@@ -40,7 +40,7 @@ test('staff access code creates an admin account case insensitively', function (
     ]);
 
     $response->assertSessionHasNoErrors()
-        ->assertRedirect(route('admin.dashboard', absolute: false));
+        ->assertRedirect(route('dashboard', absolute: false));
 
     expect(User::query()->where('email', 'admin@example.com')->first()?->role)->toBe('admin');
 });
@@ -55,7 +55,7 @@ test('staff access code creates a supervisor account case insensitively', functi
     ]);
 
     $response->assertSessionHasNoErrors()
-        ->assertRedirect(route('supervisor.dashboard', absolute: false));
+        ->assertRedirect(route('dashboard', absolute: false));
 
     expect(User::query()->where('email', 'supervisor@example.com')->first()?->role)->toBe('supervisor');
 });

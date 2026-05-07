@@ -7,7 +7,9 @@
       "Bash(php -r \"echo md5\\('livewire.fyp-projects' . 3\\);\")",
       "Read(//c/Users/amir umar danial/Herd/fyp-dashboard/storage/framework/**)",
       "Bash(grep -r \"livewire/classes\\\\|livewire\\\\\\\\\\\\\\\\classes\" \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\\\\vendor\\\\livewire\")",
-      "PowerShell(Remove-Item *)"
+      "PowerShell(Remove-Item *)",
+      "Bash(./vendor/bin/pest)",
+      "Bash(php vendor/bin/pest)"
     ]
   }
 }

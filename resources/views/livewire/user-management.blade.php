@@ -1,17 +1,23 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use function Livewire\Volt\{state};
 
-// This tells the page: "Go get all the Users from the database"
 state(['users' => fn() => User::all()]);
 
-// This is the function that runs when you change the dropdown
 $updateRole = function ($userId, $newRole) {
-    $user = User::find($userId);
+    abort_unless(Auth::user()?->role === 'coordinator', 403);
+    abort_unless(in_array($newRole, ['student', 'supervisor', 'coordinator']), 422);
+
+    if (Auth::id() === (int) $userId) {
+        session()->flash('error', 'You cannot change your own role.');
+        return;
+    }
+
+    $user = User::findOrFail($userId);
     $user->update(['role' => $newRole]);
 
-    // Refresh the data so the table updates instantly
     $this->users = User::all();
 
     session()->flash('message', 'User role updated successfully!');
@@ -28,6 +34,12 @@ $updateRole = function ($userId, $newRole) {
     @if (session()->has('message'))
         <div class="p-3 mb-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg">
             {{ session('message') }}
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="p-3 mb-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg">
+            {{ session('error') }}
         </div>
     @endif
 
