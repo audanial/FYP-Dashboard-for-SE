@@ -9,7 +9,12 @@
       "Bash(grep -r \"livewire/classes\\\\|livewire\\\\\\\\\\\\\\\\classes\" \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\\\\vendor\\\\livewire\")",
       "PowerShell(Remove-Item *)",
       "Bash(./vendor/bin/pest)",
-      "Bash(php vendor/bin/pest)"
+      "Bash(php vendor/bin/pest)",
+      "Bash(C:\\\\Users\\\\amir umar danial\\\\.claude\\\\plugins\\\\cache\\\\claude-plugins-official\\\\superpowers\\\\5.1.0\\\\skills\\\\brainstorming\\\\scripts\\\\start-server.sh *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(./vendor/bin/pest tests/Feature/UserManagementTest.php --colors)",
+      "Bash(php vendor/bin/pest tests/Feature/UserManagementTest.php --colors)"
     ]
   }
 }
