@@ -74,6 +74,56 @@ $updateRole = function ($userId, $newRole) {
         @endif
     </div>
 
+    {{-- ② STAT CARDS --}}
+    <div class="grid grid-cols-1 gap-4 border-b border-gray-100 bg-gray-50 px-6 py-5 sm:grid-cols-3">
+
+        {{-- Students --}}
+        <div class="rounded-xl border border-sky-200 bg-white p-4 shadow-sm">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-sky-600">Total Students</p>
+                    <p class="mt-2 text-3xl font-bold text-sky-900">{{ $this->stats['students'] }}</p>
+                </div>
+                <div class="rounded-lg bg-sky-100 p-2 text-sky-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.627 48.627 0 0 1 12 20.904a48.627 48.627 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.57 50.57 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.902 59.902 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        {{-- Supervisors --}}
+        <div class="rounded-xl border border-emerald-200 bg-white p-4 shadow-sm">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Total Supervisors</p>
+                    <p class="mt-2 text-3xl font-bold text-emerald-900">{{ $this->stats['supervisors'] }}</p>
+                </div>
+                <div class="rounded-lg bg-emerald-100 p-2 text-emerald-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        {{-- Coordinators --}}
+        <div class="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-violet-600">FYP Coordinators</p>
+                    <p class="mt-2 text-3xl font-bold text-violet-900">{{ $this->stats['coordinators'] }}</p>
+                </div>
+                <div class="rounded-lg bg-violet-100 p-2 text-violet-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
