@@ -176,36 +176,66 @@ $updateRole = function ($userId, $newRole) {
 
     </div>
 
+    {{-- ④ USER TABLE --}}
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left">
             <thead>
-            <tr class="border-b border-neutral-100 bg-neutral-50/50">
-                <th class="p-3 text-xs font-semibold text-gray-600 uppercase">User Name</th>
-                <th class="p-3 text-xs font-semibold text-gray-600 uppercase">Email Address</th>
-                <th class="p-3 text-xs font-semibold text-gray-600 uppercase">Current Role</th>
-                <th class="p-3 text-xs font-semibold text-gray-600 uppercase">Assign New Role</th>
-            </tr>
-            </thead>
-            <tbody class="divide-y divide-neutral-100">
-            @foreach($this->filteredUsers as $user)
-                <tr class="hover:bg-neutral-50/50 transition-colors">
-                    <td class="p-3 text-sm text-gray-700 font-medium">{{ $user->name }}</td>
-                    <td class="p-3 text-sm text-gray-500">{{ $user->email }}</td>
-                    <td class="p-3">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 uppercase">
-                            {{ $user->role }}
-                        </span>
-                    </td>
-                    <td class="p-3">
-                        <select wire:change="updateRole({{ $user->id }}, $event.target.value)"
-                                class="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value="student" {{ $user->role == 'student' ? 'selected' : '' }}>Student</option>
-                            <option value="supervisor" {{ $user->role == 'supervisor' ? 'selected' : '' }}>Supervisor</option>
-                            <option value="coordinator" {{ $user->role == 'coordinator' ? 'selected' : '' }}>Coordinator</option>
-                        </select>
-                    </td>
+                <tr class="border-b border-gray-100 bg-gray-50">
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Name</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Email</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Role</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Department</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Actions</th>
                 </tr>
-            @endforeach
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                @forelse($this->filteredUsers as $user)
+                    <tr class="transition-colors hover:bg-gray-50/50">
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-gray-900">{{ $user->name }}</div>
+                            <div class="text-xs text-gray-400">{{ $user->displayUsername() }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ $user->email }}</td>
+                        <td class="px-6 py-4">
+                            @php
+                                $roleClasses = match($user->role) {
+                                    'student'     => 'bg-blue-100 text-blue-700',
+                                    'supervisor'  => 'bg-emerald-100 text-emerald-700',
+                                    'coordinator' => 'bg-violet-100 text-violet-700',
+                                    default       => 'bg-gray-100 text-gray-600',
+                                };
+                            @endphp
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize {{ $roleClasses }}">
+                                {{ $user->role }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {{ $user->department ?? 'Not assigned' }}
+                        </td>
+                        <td class="px-6 py-4">
+                            @if($user->is_active)
+                                <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">Active</span>
+                            @else
+                                <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">Inactive</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
+                            <button type="button"
+                                    disabled
+                                    title="Edit functionality coming in a future step"
+                                    class="cursor-not-allowed rounded-md border border-gray-200 px-3 py-1 text-xs font-medium text-gray-400 opacity-50">
+                                Edit
+                            </button>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-sm text-gray-400">
+                            No users match the current search or filter.
+                        </td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

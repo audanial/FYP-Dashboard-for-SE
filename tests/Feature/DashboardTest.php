@@ -166,7 +166,7 @@ test('coordinator can access the user management page', function () {
 
     $this->get(route('admin.users'))
         ->assertOk()
-        ->assertSee('User Role Management');
+        ->assertSee('Manage Users');
 });
 
 test('students are redirected away from the user management page', function () {
