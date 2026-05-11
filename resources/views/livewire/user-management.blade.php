@@ -43,23 +43,36 @@ $updateRole = function ($userId, $newRole) {
 
 ?>
 
-<div class="mt-6 p-6 bg-white border border-neutral-200 rounded-xl shadow-sm">
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold text-gray-800">User Role Management</h2>
-        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">System Foundation</span>
+<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+
+    {{-- ① PAGE HEADER --}}
+    <div class="border-b border-gray-100 px-6 py-5">
+        <div class="flex items-start justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-gray-900">Manage Users</h1>
+                <p class="mt-1 text-sm text-gray-500">View and manage all registered users in the FYP system.</p>
+            </div>
+            <div class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <span class="inline-block h-2 w-2 rounded-full bg-green-500"></span>
+                <span class="text-xs font-medium text-gray-600">FYP Coordinator</span>
+            </div>
+        </div>
     </div>
 
-    @if (session()->has('message'))
-        <div class="p-3 mb-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg">
-            {{ session('message') }}
-        </div>
-    @endif
+    {{-- Flash messages --}}
+    <div class="px-6">
+        @if (session()->has('message'))
+            <div class="mt-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+                {{ session('message') }}
+            </div>
+        @endif
 
-    @if (session()->has('error'))
-        <div class="p-3 mb-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg">
-            {{ session('error') }}
-        </div>
-    @endif
+        @if (session()->has('error'))
+            <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                {{ session('error') }}
+            </div>
+        @endif
+    </div>
 
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
