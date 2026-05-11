@@ -2,9 +2,29 @@
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use function Livewire\Volt\{state};
+use function Livewire\Volt\{state, computed};
 
-state(['users' => fn() => User::all()]);
+state([
+    'search'     => '',
+    'roleFilter' => 'all',
+]);
+
+$filteredUsers = computed(function () {
+    return User::query()
+        ->when($this->roleFilter !== 'all', fn($q) => $q->where('role', $this->roleFilter))
+        ->when($this->search, fn($q) => $q->where(function ($q) {
+            $q->where('name', 'like', '%' . $this->search . '%')
+              ->orWhere('email', 'like', '%' . $this->search . '%');
+        }))
+        ->orderBy('name')
+        ->get();
+});
+
+$stats = computed(fn() => [
+    'students'     => User::where('role', 'student')->count(),
+    'supervisors'  => User::where('role', 'supervisor')->count(),
+    'coordinators' => User::where('role', 'coordinator')->count(),
+]);
 
 $updateRole = function ($userId, $newRole) {
     abort_unless(Auth::user()?->role === 'coordinator', 403);
@@ -17,8 +37,6 @@ $updateRole = function ($userId, $newRole) {
 
     $user = User::findOrFail($userId);
     $user->update(['role' => $newRole]);
-
-    $this->users = User::all();
 
     session()->flash('message', 'User role updated successfully!');
 };
@@ -54,7 +72,7 @@ $updateRole = function ($userId, $newRole) {
             </tr>
             </thead>
             <tbody class="divide-y divide-neutral-100">
-            @foreach($users as $user)
+            @foreach($this->filteredUsers as $user)
                 <tr class="hover:bg-neutral-50/50 transition-colors">
                     <td class="p-3 text-sm text-gray-700 font-medium">{{ $user->name }}</td>
                     <td class="p-3 text-sm text-gray-500">{{ $user->email }}</td>
