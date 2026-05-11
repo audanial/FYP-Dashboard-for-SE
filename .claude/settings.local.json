@@ -14,7 +14,9 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(./vendor/bin/pest tests/Feature/UserManagementTest.php --colors)",
-      "Bash(php vendor/bin/pest tests/Feature/UserManagementTest.php --colors)"
+      "Bash(php vendor/bin/pest tests/Feature/UserManagementTest.php --colors)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\" -Force)",
+      "Bash(Select-Object Name, Mode)"
     ]
   }
 }
