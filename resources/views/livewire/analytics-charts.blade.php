@@ -177,8 +177,6 @@ $updatedPhase = function () {
 
 @script
 <script>
-    console.log('analytics script loaded');
-
     let chartData = @js([
         'domainLabels'     => $this->domainStats->keys()->toArray(),
         'domainValues'     => $this->domainStats->values()->toArray(),
@@ -211,7 +209,6 @@ $updatedPhase = function () {
 
         const d = getChartData();
 
-        console.log('creating domain chart');
         domainChart = new Chart(domainEl, {
             type: 'bar',
             data: {
@@ -234,7 +231,6 @@ $updatedPhase = function () {
             }
         });
 
-        console.log('creating platform chart');
         platformChart = new Chart(platformEl, {
             type: 'doughnut',
             data: {
@@ -262,7 +258,6 @@ $updatedPhase = function () {
             }
         });
 
-        console.log('creating ifyp chart');
         ifypChart = new Chart(ifypEl, {
             type: 'doughnut',
             data: {
@@ -285,7 +280,6 @@ $updatedPhase = function () {
             }
         });
 
-        console.log('creating supervisor workload chart');
         supervisorChart = new Chart(supervisorEl, {
             type: 'bar',
             data: {
@@ -311,30 +305,19 @@ $updatedPhase = function () {
 
     function tryBuildCharts(attempt = 1) {
         try {
-            console.log('charts init attempt', attempt);
-            console.log('Chart available:', typeof Chart);
-
             const domainEl     = document.getElementById('domainChart');
             const platformEl   = document.getElementById('platformChart');
             const ifypEl       = document.getElementById('ifypChart');
             const supervisorEl = document.getElementById('supervisorChart');
 
-            console.log('domainChart canvas:', domainEl);
-            console.log('platformChart canvas:', platformEl);
-            console.log('ifypChart canvas:', ifypEl);
-            console.log('supervisorChart canvas:', supervisorEl);
-
             if (!domainEl || !platformEl || !ifypEl || !supervisorEl) {
-                console.log('canvas missing — retry in 50ms');
                 if (attempt < 3) setTimeout(() => tryBuildCharts(attempt + 1), 50);
                 return;
             }
 
-            console.log('canvas found');
             buildCharts();
-            console.log('charts rendered successfully');
         } catch (e) {
-            console.error('tryBuildCharts error (attempt ' + attempt + '):', e);
+            // chart init failed silently
         }
     }
 

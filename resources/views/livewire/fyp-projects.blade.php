@@ -211,7 +211,7 @@
 
             {{-- Page header --}}
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-black! dark:text-white">FYP Dashboard: {{ $phase }}</h2>
+                <h2 class="text-2xl font-bold text-black! dark:text-white">FYP Projects: {{ $phase }}</h2>
 
                 <select wire:model.live="semester" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 !text-black">
                     <option value="OCTOBER 2025">October 2025 (Previous)</option>
@@ -271,15 +271,32 @@
                                 <input type="file" wire:model="csvFile"
                                        class="text-xs text-gray-500 file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                                 <button wire:click="importCsv"
+                                        wire:loading.attr="disabled"
+                                        wire:target="importCsv"
+                                        wire:loading.class="opacity-50 cursor-not-allowed"
                                         class="bg-indigo-600 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-indigo-700 transition">
-                                    Import CSV
+                                    <span wire:loading.remove wire:target="importCsv">Import CSV</span>
+                                    <span wire:loading wire:target="importCsv">Importing…</span>
                                 </button>
                             </div>
                             @if ($importError)
-                                <p class="text-xs text-red-600 font-medium">{{ $importError }}</p>
+                                <div x-data="{ show: true }"
+                                     x-show="show"
+                                     x-init="setTimeout(() => { show = false }, 4000)"
+                                     x-transition:leave="transition ease-in duration-300"
+                                     x-transition:leave-start="opacity-100"
+                                     x-transition:leave-end="opacity-0">
+                                    <p class="text-xs text-red-600 font-medium">{{ $importError }}</p>
+                                </div>
                             @endif
                             @if ($importReport)
-                                <div class="mt-1 text-right text-xs space-y-0.5">
+                                <div x-data="{ show: true }"
+                                     x-show="show"
+                                     x-init="setTimeout(() => { show = false }, 4000)"
+                                     x-transition:leave="transition ease-in duration-300"
+                                     x-transition:leave-start="opacity-100"
+                                     x-transition:leave-end="opacity-0"
+                                     class="mt-1 text-right text-xs space-y-0.5">
                                     <p class="font-semibold text-green-600">Import completed successfully</p>
                                     <p class="text-gray-500 dark:text-gray-400">Total rows: {{ $importReport['total'] }}</p>
                                     <p class="text-green-600">Imported: {{ $importReport['imported'] }}</p>

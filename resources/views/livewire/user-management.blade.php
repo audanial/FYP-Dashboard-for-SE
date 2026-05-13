@@ -173,13 +173,25 @@ $deleteUser = function () {
     {{-- Flash messages --}}
     <div class="px-6">
         @if (session()->has('message'))
-            <div class="mt-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+            <div x-data="{ show: true }"
+                 x-show="show"
+                 x-init="setTimeout(() => { show = false }, 4000)"
+                 x-transition:leave="transition ease-in duration-300"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="mt-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
                 {{ session('message') }}
             </div>
         @endif
 
         @if (session()->has('error'))
-            <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div x-data="{ show: true }"
+                 x-show="show"
+                 x-init="setTimeout(() => { show = false }, 4000)"
+                 x-transition:leave="transition ease-in duration-300"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                 {{ session('error') }}
             </div>
         @endif
@@ -493,6 +505,9 @@ $deleteUser = function () {
                     Cancel
                 </button>
                 <button wire:click="saveUser"
+                        wire:loading.attr="disabled"
+                        wire:target="saveUser"
+                        wire:loading.class="opacity-50 cursor-not-allowed"
                         type="button"
                         class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
                     Save changes
@@ -575,6 +590,9 @@ $deleteUser = function () {
                     Cancel
                 </button>
                 <button wire:click="saveReassign"
+                        wire:loading.attr="disabled"
+                        wire:target="saveReassign"
+                        wire:loading.class="opacity-50 cursor-not-allowed"
                         type="button"
                         class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
                     Save
@@ -633,6 +651,9 @@ $deleteUser = function () {
                     Cancel
                 </button>
                 <button wire:click="deleteUser"
+                        wire:loading.attr="disabled"
+                        wire:target="deleteUser"
+                        wire:loading.class="opacity-50 cursor-not-allowed"
                         type="button"
                         class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-700">
                     Remove
