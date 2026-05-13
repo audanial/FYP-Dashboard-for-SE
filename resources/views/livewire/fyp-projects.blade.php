@@ -22,6 +22,7 @@
             'skippedCount' => 0,
             'failedCount' => 0,
             'skippedDuplicates' => [],
+            'viewMode' => 'pair',
         ]);
 
         $platforms = computed(function () {
@@ -45,10 +46,9 @@
                         ->orWhere('title', 'like', '%' . $this->search . '%')
                         ->orWhere('supervisor_name', 'like', '%' . $this->search . '%')
                         ->orWhere('assessor_name', 'like', '%' . $this->search . '%')
-                        ->orWhere('domain', 'like', '%' . $this->search . '%')      // Search Domain
-                        ->orWhere('application_type', 'like', '%' . $this->search . '%'); // Search Platform
+                        ->orWhere('domain', 'like', '%' . $this->search . '%')
+                        ->orWhere('application_type', 'like', '%' . $this->search . '%');
 
-                    // Logic to search "Industrial" or "Regular" keywords
                     if (stripos('Industrial', $this->search) !== false) {
                         $query->orWhere('is_ifyp', true);
                     }
@@ -57,6 +57,15 @@
                     }
                 })
                 ->get();
+        });
+
+        $groupedProjects = computed(function () {
+            $withPair    = $this->projects->whereNotNull('pair_number')->sortBy('pair_number');
+            $withoutPair = $this->projects->whereNull('pair_number');
+            return [
+                'paired'   => $withPair->groupBy('pair_number'),
+                'unpaired' => $withoutPair,
+            ];
         });
 
         $normalizeApplicationType = function (string $raw): string {
@@ -199,6 +208,8 @@
         ?>
 
         <div class="p-6 bg-white dark:bg-gray-900 rounded-lg shadow">
+
+            {{-- Page header --}}
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-black! dark:text-white">FYP Dashboard: {{ $phase }}</h2>
 
@@ -208,7 +219,10 @@
                 </select>
             </div>
 
+            {{-- Filters + controls row --}}
             <div class="flex flex-col md:flex-row justify-between gap-6 mb-6">
+
+                {{-- Left: search + platform --}}
                 <div class="flex flex-1 items-center gap-4" x-data="{ hasText: false }">
                     <div class="relative w-full md:w-2/3">
                         <input wire:model.live="search"
@@ -234,47 +248,67 @@
                     </select>
                 </div>
 
-                @if (Auth::user()?->role === 'coordinator')
-                    <div class="flex flex-col items-end gap-1">
-                        <div class="flex items-center gap-2">
-                            <input type="file" wire:model="csvFile"
-                                   class="text-xs text-gray-500 file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                            <button wire:click="importCsv"
-                                    class="bg-indigo-600 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-indigo-700 transition">
-                                Import CSV
-                            </button>
-                        </div>
-                        @if ($importError)
-                            <p class="text-xs text-red-600 font-medium">{{ $importError }}</p>
-                        @endif
-                        @if ($importReport)
-                            <div class="mt-1 text-right text-xs space-y-0.5">
-                                <p class="font-semibold text-green-600">Import completed successfully</p>
-                                <p class="text-gray-500 dark:text-gray-400">Total rows: {{ $importReport['total'] }}</p>
-                                <p class="text-green-600">Imported: {{ $importReport['imported'] }}</p>
-                                @if ($importReport['skipped'] > 0)
-                                    <p class="text-yellow-600">Skipped: {{ $importReport['skipped'] }}</p>
-                                @endif
-                                @if ($importReport['failed'] > 0)
-                                    <p class="text-red-600">Failed: {{ $importReport['failed'] }}</p>
-                                @endif
-                                @if (!empty($importReport['duplicates']))
-                                    <div x-data="{ open: false }">
-                                        <button @click="open = !open"
-                                                class="text-yellow-600 underline hover:text-yellow-800 transition-colors">
-                                            View skipped IDs ({{ count($importReport['duplicates']) }})
-                                        </button>
-                                        <p x-show="open" x-transition class="text-yellow-700 break-words max-w-xs">
-                                            {{ implode(', ', $importReport['duplicates']) }}
-                                        </p>
-                                    </div>
-                                @endif
-                            </div>
-                        @endif
+                {{-- Right: view toggle + CSV import --}}
+                <div class="flex flex-col items-end gap-2">
+
+                    {{-- View toggle --}}
+                    <div class="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                        <button wire:click="$set('viewMode', 'pair')"
+                                type="button"
+                                class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors {{ $viewMode === 'pair' ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-gray-700' }}">
+                            Pair View
+                        </button>
+                        <button wire:click="$set('viewMode', 'flat')"
+                                type="button"
+                                class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors {{ $viewMode === 'flat' ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-gray-700' }}">
+                            Flat View
+                        </button>
                     </div>
-                @endif
+
+                    @if (Auth::user()?->role === 'coordinator')
+                        <div class="flex flex-col items-end gap-1">
+                            <div class="flex items-center gap-2">
+                                <input type="file" wire:model="csvFile"
+                                       class="text-xs text-gray-500 file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                <button wire:click="importCsv"
+                                        class="bg-indigo-600 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-indigo-700 transition">
+                                    Import CSV
+                                </button>
+                            </div>
+                            @if ($importError)
+                                <p class="text-xs text-red-600 font-medium">{{ $importError }}</p>
+                            @endif
+                            @if ($importReport)
+                                <div class="mt-1 text-right text-xs space-y-0.5">
+                                    <p class="font-semibold text-green-600">Import completed successfully</p>
+                                    <p class="text-gray-500 dark:text-gray-400">Total rows: {{ $importReport['total'] }}</p>
+                                    <p class="text-green-600">Imported: {{ $importReport['imported'] }}</p>
+                                    @if ($importReport['skipped'] > 0)
+                                        <p class="text-yellow-600">Skipped: {{ $importReport['skipped'] }}</p>
+                                    @endif
+                                    @if ($importReport['failed'] > 0)
+                                        <p class="text-red-600">Failed: {{ $importReport['failed'] }}</p>
+                                    @endif
+                                    @if (!empty($importReport['duplicates']))
+                                        <div x-data="{ open: false }">
+                                            <button @click="open = !open"
+                                                    class="text-yellow-600 underline hover:text-yellow-800 transition-colors">
+                                                View skipped IDs ({{ count($importReport['duplicates']) }})
+                                            </button>
+                                            <p x-show="open" x-transition class="text-yellow-700 break-words max-w-xs">
+                                                {{ implode(', ', $importReport['duplicates']) }}
+                                            </p>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                </div>
             </div>
 
+            {{-- Phase tabs --}}
             <div class="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg mb-6 max-w-md">
                 <button wire:click="$set('phase', 'FYP 1')"
                         class="flex-1 py-2 px-4 rounded-md text-sm font-medium {{ $phase === 'FYP 1' ? 'bg-white shadow text-indigo-600' : 'text-gray-500' }}">
@@ -286,56 +320,178 @@
                 </button>
             </div>
 
+            {{-- Table --}}
             <div class="overflow-x-auto border rounded-lg border-gray-200 dark:border-gray-700">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">No.</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Student Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Student ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Project Title</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Supervisor</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Assessor</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Domain</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Platform</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Type</th>
-                    </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
-                    @forelse($this->projects as $index => $project)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <td class="px-6 py-4 text-sm !text-black">{{ $index + 1 }}</td>
-                            <td class="px-6 py-4 text-sm font-medium !text-black">{{ $project->student_name }}</td>
-                            <td class="px-6 py-4 text-sm font-semibold !text-black">{{ $project->student_id }}</td>
-                            <td class="px-6 py-4 text-sm !text-black">{{ $project->title }}</td>
-                            <td class="px-6 py-4 text-sm !text-black">{{ $project->supervisor_name }}</td>
-                            <td class="px-6 py-4 text-sm !text-black">{{ $project->assessor_name ?? '-' }}</td>
 
-                            <td class="px-6 py-4 text-sm !text-black">
-                            <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">
-                                {{ $project->domain }}
-                            </span>
-                            </td>
+                @if ($viewMode === 'flat')
+                    {{-- ── FLAT VIEW ─────────────────────────────────────────────── --}}
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">No.</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Student Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Student ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Project Title</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Supervisor</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Assessor</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Domain</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Platform</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Type</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
+                            @forelse($this->projects as $index => $project)
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                    <td class="px-6 py-4 text-sm !text-black">{{ $index + 1 }}</td>
+                                    <td class="px-6 py-4 text-sm font-medium !text-black">{{ $project->student_name }}</td>
+                                    <td class="px-6 py-4 text-sm font-semibold !text-black">{{ $project->student_id }}</td>
+                                    <td class="px-6 py-4 text-sm !text-black">{{ $project->title }}</td>
+                                    <td class="px-6 py-4 text-sm !text-black">{{ $project->supervisor_name }}</td>
+                                    <td class="px-6 py-4 text-sm !text-black">{{ $project->assessor_name ?? '-' }}</td>
+                                    <td class="px-6 py-4 text-sm !text-black">
+                                        <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">
+                                            {{ $project->domain }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm !text-black">{{ $project->application_type }}</td>
+                                    <td class="px-6 py-4 text-sm !text-black">
+                                        @if($project->is_ifyp)
+                                            <span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">Industrial (IFYP)</span>
+                                        @else
+                                            <span class="text-gray-400 text-xs italic">Regular</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="9" class="px-6 py-10 text-center !text-black">
+                                        No students found for <strong>{{ $phase }}</strong> in <strong>{{ $semester }}</strong>.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
 
-                            <td class="px-6 py-4 text-sm !text-black">{{ $project->application_type }}</td>
+                @else
+                    {{-- ── PAIR VIEW ─────────────────────────────────────────────── --}}
+                    <table class="min-w-full bg-white dark:bg-gray-900">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                                <th class="px-4 py-3 text-center text-xs font-bold !text-black uppercase w-16">Pair</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Student Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Student ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Project Title</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Supervisor</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Assessor</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Domain</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Platform</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold !text-black uppercase">Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
 
-                            <td class="px-6 py-4 text-sm !text-black">
-                                @if($project->is_ifyp)
-                                    <span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">Industrial (IFYP)</span>
-                                @else
-                                    <span class="text-gray-400 text-xs italic">Regular</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="9" class="px-6 py-10 text-center !text-black">
-                                No students found for <strong>{{ $phase }}</strong> in <strong>{{ $semester }}</strong>.
-                            </td>
-                        </tr>
-                    @endforelse
-                    </tbody>
-                </table>
+                            @if ($this->projects->isEmpty())
+                                <tr>
+                                    <td colspan="9" class="px-6 py-10 text-center !text-black">
+                                        No students found for <strong>{{ $phase }}</strong> in <strong>{{ $semester }}</strong>.
+                                    </td>
+                                </tr>
+                            @else
+
+                                {{-- Paired groups --}}
+                                @foreach ($this->groupedProjects['paired'] as $pairNum => $pairStudents)
+                                    @foreach ($pairStudents as $student)
+                                        @php
+                                            $isFirstInPair  = $loop->first;
+                                            $isFirstPair    = $loop->parent->first;
+                                            $rowBorder = match (true) {
+                                                $isFirstInPair && $isFirstPair  => '',
+                                                $isFirstInPair && !$isFirstPair => 'border-t-2 border-gray-400',
+                                                default                          => 'border-t border-gray-100',
+                                            };
+                                        @endphp
+                                        <tr class="{{ $rowBorder }} hover:bg-gray-50 dark:hover:bg-gray-800">
+
+                                            {{-- Pair number cell — rowspan spans both students in this pair --}}
+                                            @if ($isFirstInPair)
+                                                <td rowspan="{{ $pairStudents->count() }}"
+                                                    class="px-4 py-4 text-sm font-bold text-center text-indigo-600 align-middle border-r border-gray-100 dark:border-gray-700 w-16">
+                                                    {{ $pairNum }}
+                                                </td>
+                                            @endif
+
+                                            {{-- Student name + ID always shown --}}
+                                            <td class="px-6 py-4 text-sm font-medium !text-black">{{ $student->student_name }}</td>
+                                            <td class="px-6 py-4 text-sm font-semibold !text-black">{{ $student->student_id }}</td>
+
+                                            {{-- Shared columns: only first student in pair shows values --}}
+                                            @if ($isFirstInPair)
+                                                <td class="px-6 py-4 text-sm !text-black">{{ $student->title }}</td>
+                                                <td class="px-6 py-4 text-sm !text-black">{{ $student->supervisor_name }}</td>
+                                                <td class="px-6 py-4 text-sm !text-black">{{ $student->assessor_name ?? '-' }}</td>
+                                                <td class="px-6 py-4 text-sm !text-black">
+                                                    <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">
+                                                        {{ $student->domain }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 text-sm !text-black">{{ $student->application_type }}</td>
+                                                <td class="px-6 py-4 text-sm !text-black">
+                                                    @if($student->is_ifyp)
+                                                        <span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">Industrial (IFYP)</span>
+                                                    @else
+                                                        <span class="text-gray-400 text-xs italic">Regular</span>
+                                                    @endif
+                                                </td>
+                                            @else
+                                                <td class="px-6 py-4"></td>
+                                                <td class="px-6 py-4"></td>
+                                                <td class="px-6 py-4"></td>
+                                                <td class="px-6 py-4"></td>
+                                                <td class="px-6 py-4"></td>
+                                                <td class="px-6 py-4"></td>
+                                                <td class="px-6 py-4"></td>
+                                            @endif
+                                        </tr>
+                                    @endforeach
+                                @endforeach
+
+                                {{-- Unpaired students — shown at the bottom --}}
+                                @foreach ($this->groupedProjects['unpaired'] as $student)
+                                    @php
+                                        $unpairBorder = match (true) {
+                                            $loop->first && $this->groupedProjects['paired']->isNotEmpty() => 'border-t-2 border-gray-400',
+                                            $loop->first                                                   => '',
+                                            default                                                        => 'border-t border-gray-100',
+                                        };
+                                    @endphp
+                                    <tr class="{{ $unpairBorder }} hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <td class="px-4 py-4 text-sm text-center text-gray-300 border-r border-gray-100 dark:border-gray-700 w-16">—</td>
+                                        <td class="px-6 py-4 text-sm font-medium !text-black">{{ $student->student_name }}</td>
+                                        <td class="px-6 py-4 text-sm font-semibold !text-black">{{ $student->student_id }}</td>
+                                        <td class="px-6 py-4 text-sm !text-black">{{ $student->title }}</td>
+                                        <td class="px-6 py-4 text-sm !text-black">{{ $student->supervisor_name }}</td>
+                                        <td class="px-6 py-4 text-sm !text-black">{{ $student->assessor_name ?? '-' }}</td>
+                                        <td class="px-6 py-4 text-sm !text-black">
+                                            <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">
+                                                {{ $student->domain }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm !text-black">{{ $student->application_type }}</td>
+                                        <td class="px-6 py-4 text-sm !text-black">
+                                            @if($student->is_ifyp)
+                                                <span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">Industrial (IFYP)</span>
+                                            @else
+                                                <span class="text-gray-400 text-xs italic">Regular</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+
+                            @endif
+                        </tbody>
+                    </table>
+                @endif
+
             </div>
         </div>
     </main>
