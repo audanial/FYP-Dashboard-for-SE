@@ -141,6 +141,10 @@
                             ? trim($row[$map['application_type']])
                             : '';
 
+                        $pairNumber = ($map['pair_number'] !== null && isset($row[$map['pair_number']]) && trim($row[$map['pair_number']]) !== '')
+                            ? (int) trim($row[$map['pair_number']])
+                            : null;
+
                         $fields = [
                             'student_name'     => $studentName,
                             'student_id'       => $studentId,
@@ -151,6 +155,7 @@
                             'application_type' => $this->normalizeApplicationType($rawApplicationType),
                             'fyp_phase'        => $this->phase,
                             'semester'         => $this->semester,
+                            'pair_number'      => $pairNumber,
                         ];
 
                         if ($duplicateMode === 'update') {

@@ -32,5 +32,6 @@ class FypProject extends Model
         'fyp_phase',
         'phase',
         'semester',
+        'pair_number',
     ];
 }

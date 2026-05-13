@@ -65,5 +65,12 @@ return [
             'FYP Phase',
             'FYP',
         ],
+
+        'pair_number' => [
+            'pair_number',
+            'Pair Number',
+            'Pair No',
+            'Pair',
+        ],
     ],
 ];

@@ -34,25 +34,56 @@ $ifypStats = computed(function () {
     ]);
 });
 
+$summaryStats = computed(function () {
+    $projects = FypProject::where('semester', $this->semester)
+        ->get()
+        ->filter(fn($p) => $this->phase === 'all' || $p->fyp_phase === $this->phase);
+
+    $total           = $projects->count();
+    $industrial      = $projects->filter(fn($p) => (bool) $p->is_ifyp)->count();
+    $supervisorCount = $projects->pluck('supervisor_name')->filter()->unique()->count();
+
+    return [
+        'total'              => $total,
+        'industrial'         => $industrial,
+        'industrial_pct'     => $total > 0 ? round($industrial / $total * 100) : 0,
+        'domains_covered'    => $projects->pluck('domain')->filter()->unique()->count(),
+        'avg_per_supervisor' => $supervisorCount > 0 ? round($total / $supervisorCount, 1) : 0,
+    ];
+});
+
+$supervisorWorkload = computed(function () {
+    return FypProject::where('semester', $this->semester)
+        ->get()
+        ->filter(fn($p) => $this->phase === 'all' || $p->fyp_phase === $this->phase)
+        ->groupBy(fn($p) => $p->supervisor_name ?: 'Unknown')
+        ->map(fn($group) => $group->count())
+        ->sortDesc();
+});
+
 $updatedSemester = function () {
     $this->dispatch('charts-updated',
-        domainLabels:   $this->domainStats->keys()->toArray(),
-        domainValues:   $this->domainStats->values()->toArray(),
-        platformLabels: $this->platformStats->keys()->toArray(),
-        platformValues: $this->platformStats->values()->toArray(),
-        ifypLabels:     $this->ifypStats->keys()->toArray(),
-        ifypValues:     $this->ifypStats->values()->toArray(),
+        domainLabels:     $this->domainStats->keys()->toArray(),
+        domainValues:     $this->domainStats->values()->toArray(),
+        platformLabels:   $this->platformStats->keys()->toArray(),
+        platformValues:   $this->platformStats->values()->toArray(),
+        ifypLabels:       $this->ifypStats->keys()->toArray(),
+        ifypValues:       $this->ifypStats->values()->toArray(),
+        supervisorLabels: $this->supervisorWorkload->keys()->toArray(),
+        supervisorValues: $this->supervisorWorkload->values()->toArray(),
     );
 };
 
 $updatedPhase = function () {
     $this->dispatch('charts-updated',
-        domainLabels:   $this->domainStats->keys()->toArray(),
-        domainValues:   $this->domainStats->values()->toArray(),
-        platformLabels: $this->platformStats->keys()->toArray(),
-        platformValues: $this->platformStats->values()->toArray(),
-        ifypLabels:     $this->ifypStats->keys()->toArray(),
-        ifypValues:     $this->ifypStats->values()->toArray(),
+        domainLabels:     $this->domainStats->keys()->toArray(),
+        domainValues:     $this->domainStats->values()->toArray(),
+        platformLabels:   $this->platformStats->keys()->toArray(),
+        platformValues:   $this->platformStats->values()->toArray(),
+        ifypLabels:       $this->ifypStats->keys()->toArray(),
+        ifypValues:       $this->ifypStats->values()->toArray(),
+        supervisorLabels: $this->supervisorWorkload->keys()->toArray(),
+        supervisorValues: $this->supervisorWorkload->values()->toArray(),
     );
 };
 ?>
@@ -63,6 +94,7 @@ $updatedPhase = function () {
 
 <div class="flex flex-col gap-4">
 
+    {{-- Header row: title + filters --}}
     <div class="flex items-center justify-between">
         <h3 class="text-sm font-bold text-gray-600">Analytics — {{ $semester }}</h3>
         <div class="flex items-center gap-2">
@@ -78,6 +110,36 @@ $updatedPhase = function () {
         </div>
     </div>
 
+    {{-- Stat cards --}}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+        <div class="bg-white rounded-xl border border-indigo-100 p-4 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wide text-indigo-500">Total Pairs</p>
+            <p class="mt-2 text-3xl font-bold text-indigo-900">{{ $this->summaryStats['total'] }}</p>
+            <p class="mt-1 text-xs text-gray-400">{{ $phase === 'all' ? 'all phases' : $phase }}</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-amber-100 p-4 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wide text-amber-500">Industrial (IFYP)</p>
+            <p class="mt-2 text-3xl font-bold text-amber-900">{{ $this->summaryStats['industrial'] }}</p>
+            <p class="mt-1 text-xs text-gray-400">{{ $this->summaryStats['industrial_pct'] }}% of cohort</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-emerald-100 p-4 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wide text-emerald-500">Domains Covered</p>
+            <p class="mt-2 text-3xl font-bold text-emerald-900">{{ $this->summaryStats['domains_covered'] }}</p>
+            <p class="mt-1 text-xs text-gray-400">unique domains</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-violet-100 p-4 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wide text-violet-500">Avg Pairs / Supervisor</p>
+            <p class="mt-2 text-3xl font-bold text-violet-900">{{ $this->summaryStats['avg_per_supervisor'] }}</p>
+            <p class="mt-1 text-xs text-gray-400">pairs per supervisor</p>
+        </div>
+
+    </div>
+
+    {{-- Existing three charts --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4" wire:key="charts-{{ $semester }}">
 
         <div class="bg-white rounded-xl border border-neutral-200 p-5 shadow-sm">
@@ -103,6 +165,14 @@ $updatedPhase = function () {
 
     </div>
 
+    {{-- Supervisor workload chart --}}
+    <div class="bg-white rounded-xl border border-neutral-200 p-5 shadow-sm">
+        <p class="text-sm font-bold text-gray-600 mb-3">Supervisor Workload Distribution</p>
+        <div class="relative h-80">
+            <canvas id="supervisorChart"></canvas>
+        </div>
+    </div>
+
 </div>
 
 @script
@@ -110,30 +180,34 @@ $updatedPhase = function () {
     console.log('analytics script loaded');
 
     let chartData = @js([
-        'domainLabels'   => $this->domainStats->keys()->toArray(),
-        'domainValues'   => $this->domainStats->values()->toArray(),
-        'platformLabels' => $this->platformStats->keys()->toArray(),
-        'platformValues' => $this->platformStats->values()->toArray(),
-        'ifypLabels'     => $this->ifypStats->keys()->toArray(),
-        'ifypValues'     => $this->ifypStats->values()->toArray(),
+        'domainLabels'     => $this->domainStats->keys()->toArray(),
+        'domainValues'     => $this->domainStats->values()->toArray(),
+        'platformLabels'   => $this->platformStats->keys()->toArray(),
+        'platformValues'   => $this->platformStats->values()->toArray(),
+        'ifypLabels'       => $this->ifypStats->keys()->toArray(),
+        'ifypValues'       => $this->ifypStats->values()->toArray(),
+        'supervisorLabels' => $this->supervisorWorkload->keys()->toArray(),
+        'supervisorValues' => $this->supervisorWorkload->values()->toArray(),
     ]);
 
-    let domainChart = null, platformChart = null, ifypChart = null;
+    let domainChart = null, platformChart = null, ifypChart = null, supervisorChart = null;
 
     function getChartData() {
         return chartData;
     }
 
     function buildCharts() {
-        const domainEl   = document.getElementById('domainChart');
-        const platformEl = document.getElementById('platformChart');
-        const ifypEl     = document.getElementById('ifypChart');
+        const domainEl     = document.getElementById('domainChart');
+        const platformEl   = document.getElementById('platformChart');
+        const ifypEl       = document.getElementById('ifypChart');
+        const supervisorEl = document.getElementById('supervisorChart');
 
-        if (!domainEl || !platformEl || !ifypEl) return;
+        if (!domainEl || !platformEl || !ifypEl || !supervisorEl) return;
 
-        if (domainChart)   { domainChart.destroy();   domainChart   = null; }
-        if (platformChart) { platformChart.destroy(); platformChart = null; }
-        if (ifypChart)     { ifypChart.destroy();     ifypChart     = null; }
+        if (domainChart)     { domainChart.destroy();     domainChart     = null; }
+        if (platformChart)   { platformChart.destroy();   platformChart   = null; }
+        if (ifypChart)       { ifypChart.destroy();       ifypChart       = null; }
+        if (supervisorChart) { supervisorChart.destroy(); supervisorChart = null; }
 
         const d = getChartData();
 
@@ -211,6 +285,28 @@ $updatedPhase = function () {
             }
         });
 
+        console.log('creating supervisor workload chart');
+        supervisorChart = new Chart(supervisorEl, {
+            type: 'bar',
+            data: {
+                labels: d.supervisorLabels,
+                datasets: [{
+                    label: 'Pairs',
+                    data: d.supervisorValues,
+                    backgroundColor: 'rgba(99, 102, 241, 0.75)',
+                    borderColor: 'rgba(99, 102, 241, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
     }
 
     function tryBuildCharts(attempt = 1) {
@@ -218,15 +314,17 @@ $updatedPhase = function () {
             console.log('charts init attempt', attempt);
             console.log('Chart available:', typeof Chart);
 
-            const domainEl   = document.getElementById('domainChart');
-            const platformEl = document.getElementById('platformChart');
-            const ifypEl     = document.getElementById('ifypChart');
+            const domainEl     = document.getElementById('domainChart');
+            const platformEl   = document.getElementById('platformChart');
+            const ifypEl       = document.getElementById('ifypChart');
+            const supervisorEl = document.getElementById('supervisorChart');
 
             console.log('domainChart canvas:', domainEl);
             console.log('platformChart canvas:', platformEl);
             console.log('ifypChart canvas:', ifypEl);
+            console.log('supervisorChart canvas:', supervisorEl);
 
-            if (!domainEl || !platformEl || !ifypEl) {
+            if (!domainEl || !platformEl || !ifypEl || !supervisorEl) {
                 console.log('canvas missing — retry in 50ms');
                 if (attempt < 3) setTimeout(() => tryBuildCharts(attempt + 1), 50);
                 return;

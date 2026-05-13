@@ -39,6 +39,7 @@ class FypProjectSeeder extends Seeder
                 'is_ifyp' => (rand(1, 10) > 8),
                 'fyp_phase' => $phase,
                 'semester' => 'MARCH 2026',
+                'pair_number' => (int) floor($i / 2) + 1,
             ]);
         }
 
@@ -56,6 +57,7 @@ class FypProjectSeeder extends Seeder
                 'is_ifyp' => (rand(1, 10) > 9),
                 'fyp_phase' => $phase,
                 'semester' => 'OCTOBER 2025', // Fixed from 2026 to 2025
+                'pair_number' => (int) floor($i / 2) + 1,
             ]);
         }
     }
