@@ -4,9 +4,10 @@
         use App\Services\CsvHeaderResolver;
         use Illuminate\Support\Facades\Auth;
         use Illuminate\Support\Facades\DB;
-        use function Livewire\Volt\{state, computed, usesFileUploads};
+        use function Livewire\Volt\{state, computed, usesFileUploads, usesPagination, updated};
 
         usesFileUploads();
+        usesPagination(theme: 'tailwind');
 
         state([
             'phase' => 'FYP 1',
@@ -23,6 +24,15 @@
             'failedCount' => 0,
             'skippedDuplicates' => [],
             'viewMode' => 'pair',
+        ]);
+
+        updated([
+            'search'    => fn() => $this->resetPage(),
+            'phase'     => fn() => $this->resetPage(),
+            'semester'  => fn() => $this->resetPage(),
+            'platform'  => fn() => $this->resetPage(),
+            'domain'    => fn() => $this->resetPage(),
+            'is_ifyp'   => fn() => $this->resetPage(),
         ]);
 
         $platforms = computed(function () {
@@ -56,7 +66,7 @@
                         $query->orWhere('is_ifyp', false);
                     }
                 })
-                ->get();
+                ->paginate(15);
         });
 
         $groupedProjects = computed(function () {
@@ -510,5 +520,11 @@
                 @endif
 
             </div>
+
+            @if ($this->projects->hasPages())
+                <div class="mt-4 px-2">
+                    {{ $this->projects->links() }}
+                </div>
+            @endif
         </div>
     </main>
