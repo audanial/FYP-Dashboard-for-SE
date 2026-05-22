@@ -18,7 +18,7 @@
                 placeholder="email@example.com"
             />
 
-            <div class="relative">
+            <div class="relative" x-data="{ showPassword: false }">
                 <flux:input
                     name="password"
                     :label="__('Password')"
@@ -26,8 +26,19 @@
                     required
                     autocomplete="current-password"
                     :placeholder="__('Password')"
-                    viewable
+                    x-bind:type="showPassword ? 'text' : 'password'"
+                    class:input="pe-10"
                 />
+
+                <button
+                    type="button"
+                    @click="showPassword = !showPassword"
+                    class="absolute bottom-0 end-0 flex items-center justify-center h-10 w-10 text-zinc-400 hover:text-zinc-600 dark:text-zinc-400 dark:hover:text-white focus:outline-none"
+                    :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                >
+                    <flux:icon.eye x-show="!showPassword" variant="micro" />
+                    <flux:icon.eye-slash x-show="showPassword" variant="micro" />
+                </button>
 
                 @if (Route::has('password.request'))
                     <flux:link class="absolute top-0 text-sm end-0" :href="route('password.request')" wire:navigate>

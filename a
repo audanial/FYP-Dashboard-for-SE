@@ -1,0 +1,28 @@
+[33m326a7f1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mclaude/laravel-fyp-dashboard-ot8rR[m[33m, [m[1;31morigin/claude/laravel-fyp-dashboard-ot8rR[m[33m)[m fix: pre-demo UI cleanup and polish
+[33m7b6427a[m feat: Implement Edit, Reassign and Delete in Manage Users
+[33mc25a87d[m feat: redesign dashboard page with live stat cards and page header
+[33mb11d86c[m feat: add pair view and flat view toggle to FYP Projects page
+[33m1995b7d[m add pair _number to fyp_projects for student pairing support
+[33m055a5e8[m User Management - redesign admin panel with stat cards, role filter tabs, live search, and new 6-column user table
+[33md550257[m feat: replace user table with redesigned read-only layout (Step 2 complete)
+[33m6636583[m feat: add role filter tabs and live search to user management
+[33mddfa2c8[m feat: add stat cards to user management page
+[33mb309af9[m feat: add page header to user management
+[33m0310f63[m feat: add search + role filter state and computed properties to user-management
+[33md653193[m User Management Step 2 - Task 1 tests added (TDD baseline)
+[33mfd116d7[m Add Step 2 implementation plan for user management redesign
+[33m5c467d2[m Add Step 2 design spec for user management UI redesign
+[33m22de29b[m Add department and active status fields to users
+[33mf734bf5[m Stabilize: security hardening, csv import fix & test suite cleanup
+[33m00698e2[m Change Display Program Coordinator to FYP Coordinator + create .csv test files for testing later
+[33m0ea8fb5[m Fix volt ParseError caused by 'new' keyword injection; stabilize CSV import system and component compilation
+[33m61b57d2[m Stabilize analytics dashboard with semester + phase filtering and fixed Chart.js refresh flow
+[33m4d9fcee[m Creating stable analytics charts for Domain, Platform & Type
+[33mb50f159[m Separate the table records to a new page + add side nav bar for sv and student
+[33mc7e2999[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m Refined both supervisor and student view in dashboard
+[33me1fed60[m Update supervisor student logbook and students pages
+[33m44309d9[m Add RBAC, profile page, assessor column, and UI updates
+[33ma71305a[m Fixed dashboard layout and restored project tracking table
+[33m51c3ee2[m Feat: enhance dashboard search with student ID, domain, platform and type
+[33m7672c83[m Complete tracking with student ID, domain, platform and type
+[33m1081789[m Initial backup: Dashboard with sidebar working

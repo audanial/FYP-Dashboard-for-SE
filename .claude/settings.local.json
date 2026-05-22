@@ -18,7 +18,13 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\" -Force)",
       "Bash(Select-Object Name, Mode)",
       "PowerShell(cd \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\"; php artisan tinker --execute=\"use App\\\\Models\\\\FypProject; echo 'Sample pair_numbers: '; FypProject::orderBy\\('id'\\)->take\\(6\\)->get\\(['id','student_name','pair_number']\\)->each\\(fn\\(\\\\$p\\) => print \\\\$p->id.' -> pair '.\\\\$p->pair_number.PHP_EOL\\);\" 2>&1)",
-      "PowerShell(cd \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\"; php artisan tinker --execute=\"echo App\\\\Models\\\\FypProject::orderBy\\('id'\\)->take\\(6\\)->get\\(['id','pair_number']\\)->map\\(fn\\(\\\\$p\\) => 'id='.\\\\$p->id.' pair='.\\\\$p->pair_number\\)->join\\(', '\\);\" 2>&1)"
+      "PowerShell(cd \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\"; php artisan tinker --execute=\"echo App\\\\Models\\\\FypProject::orderBy\\('id'\\)->take\\(6\\)->get\\(['id','pair_number']\\)->map\\(fn\\(\\\\$p\\) => 'id='.\\\\$p->id.' pair='.\\\\$p->pair_number\\)->join\\(', '\\);\" 2>&1)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\" -Recurse -Depth 2 -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(Format-List)",
+      "Bash(sqlite3 database/database.sqlite \"SELECT COUNT\\(*\\) as count, student_name FROM fyp_projects WHERE student_name LIKE '%Amir Umar Danial%' GROUP BY student_name;\")",
+      "PowerShell(cd \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\"; php artisan tinker --execute=\"\\\\App\\\\Models\\\\FypProject::where\\('student_name', 'like', '%Amir Umar Danial%'\\)->get\\(['student_name','student_id','fyp_phase','semester']\\)->each\\(fn\\(\\\\$p\\) => print_r\\(\\\\$p->toArray\\(\\)\\)\\);\")",
+      "Bash(node *)"
     ]
   }
 }
