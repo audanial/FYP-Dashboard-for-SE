@@ -426,6 +426,17 @@
                             @else
 
                                 {{-- Paired groups --}}
+                                @php
+                                    $firstPairKey = $this->groupedProjects['paired']->keys()->first();
+                                    $pairOffset = $firstPairKey
+                                        ? \App\Models\FypProject::where('fyp_phase', $phase)
+                                              ->where('semester', $semester)
+                                              ->whereNotNull('pair_number')
+                                              ->where('pair_number', '<', $firstPairKey)
+                                              ->distinct('pair_number')
+                                              ->count()
+                                        : 0;
+                                @endphp
                                 @foreach ($this->groupedProjects['paired'] as $pairNum => $pairStudents)
                                     @foreach ($pairStudents as $student)
                                         @php
@@ -443,7 +454,7 @@
                                             @if ($isFirstInPair)
                                                 <td rowspan="{{ $pairStudents->count() }}"
                                                     class="px-4 py-4 text-sm font-bold text-center text-indigo-600 align-middle border-r border-gray-100 dark:border-gray-700 w-16">
-                                                    {{ $pairNum }}
+                                                    {{ $pairOffset + $loop->parent->index + 1 }}
                                                 </td>
                                             @endif
 
