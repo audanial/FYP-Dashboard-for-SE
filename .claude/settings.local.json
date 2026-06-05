@@ -24,7 +24,15 @@
       "Bash(Format-List)",
       "Bash(sqlite3 database/database.sqlite \"SELECT COUNT\\(*\\) as count, student_name FROM fyp_projects WHERE student_name LIKE '%Amir Umar Danial%' GROUP BY student_name;\")",
       "PowerShell(cd \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\"; php artisan tinker --execute=\"\\\\App\\\\Models\\\\FypProject::where\\('student_name', 'like', '%Amir Umar Danial%'\\)->get\\(['student_name','student_id','fyp_phase','semester']\\)->each\\(fn\\(\\\\$p\\) => print_r\\(\\\\$p->toArray\\(\\)\\)\\);\")",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(sqlite3 database/database.sqlite \"SELECT id, name, email, role, username, is_active FROM users ORDER BY role;\")",
+      "Bash(php -r ' *)",
+      "PowerShell($php = \\(Get-Command php -ErrorAction SilentlyContinue\\).Source; if \\($php\\) { Write-Output \"PHP: $php\"; & php -v | Select-Object -First 1 } else { Write-Output \"php not on PATH\"; Get-ChildItem \"$env:USERPROFILE\\\\.config\\\\herd\\\\bin\" -ErrorAction SilentlyContinue | Select-Object Name })",
+      "Bash(php -r '$db=new PDO\\(\"sqlite:C:/Users/amir umar danial/Herd/fyp-dashboard/database/database.sqlite\"\\); $r=$db->query\\(\"SELECT sql FROM sqlite_master WHERE name=\\\\\"fyp_projects\\\\\"\"\\); echo $r->fetchColumn\\(\\);')",
+      "PowerShell($php = \\(Get-Command php -ErrorAction SilentlyContinue\\).Source; if \\(-not $php\\) { $cand = Get-ChildItem \"$env:USERPROFILE\\\\.config\\\\herd\\\\bin\\\\php.bat\",\"$env:USERPROFILE\\\\.config\\\\herd\\\\bin\\\\php.exe\" -ErrorAction SilentlyContinue | Select-Object -First 1; if \\($cand\\) { $php = $cand.FullName } }; \"PHP: $php\")",
+      "PowerShell($php = \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\"; & $php -r \"@\\\\$db=new PDO\\('sqlite:C:/Users/amir umar danial/Herd/fyp-dashboard/database/database.sqlite'\\); echo \\\\$db->query\\(\\\\\"SELECT sql FROM sqlite_master WHERE name='fyp_projects'\\\\\"\\)->fetchColumn\\(\\);\" 2>&1)",
+      "PowerShell(Get-ChildItem *)",
+      "Bash($PHP *)"
     ]
   }
 }
