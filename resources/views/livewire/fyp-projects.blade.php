@@ -118,7 +118,16 @@
 
             $this->validate(['csvFile' => 'required|mimes:csv,txt|max:1024']);
             $path = $this->csvFile->getRealPath();
-            $data = array_map('str_getcsv', file($path));
+
+            // Parse with fgetcsv so quoted fields that span multiple lines stay
+            // within a single record, and row order is preserved exactly.
+            $data = [];
+            if (($handle = fopen($path, 'r')) !== false) {
+                while (($row = fgetcsv($handle, escape: '')) !== false) {
+                    $data[] = $row;
+                }
+                fclose($handle);
+            }
 
             if (empty($data)) {
                 $this->reset('csvFile');

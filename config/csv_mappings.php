@@ -28,6 +28,7 @@ return [
         'title' => [
             'title',
             'Title',
+            'FYP Title',
             'Project Title',
             'Project',
         ],
@@ -54,9 +55,13 @@ return [
 
         'application_type' => [
             'application_type',
-            'Type',
             'Application Type',
             'Platform',
+        ],
+
+        'is_ifyp' => [
+            'is_ifyp',
+            'Type',
         ],
 
         'fyp_phase' => [
@@ -68,6 +73,7 @@ return [
 
         'pair_number' => [
             'pair_number',
+            'Group',
             'Pair Number',
             'Pair No',
             'Pair',
