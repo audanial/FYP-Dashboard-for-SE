@@ -103,6 +103,11 @@
             };
         };
 
+        $normalizeIfyp = function (string $raw): bool {
+            $v = strtolower(trim($raw));
+            return in_array($v, ['industrial', 'ifyp'], true);
+        };
+
         $importCsv = function () {
             abort_unless(Auth::user()?->role === 'coordinator', 403);
 
@@ -150,28 +155,64 @@
 
             try {
                 DB::transaction(function () use ($data, $map, $duplicateMode) {
+                    // Read a mapped cell as a trimmed string ('' when unmapped/missing).
+                    $cell = fn (array $row, ?int $i): string => ($i !== null && isset($row[$i])) ? trim($row[$i]) : '';
+
+                    // Carried project metadata. A partner/continuation row whose
+                    // Group, title, supervisor, etc. are blank inherits the last
+                    // seen value from the pair's lead row (forward-fill).
+                    $carryPair = null;
+                    $carryTitle = '';
+                    $carrySupervisor = '';
+                    $carryAssessor = '';
+                    $carryDomain = '';
+                    $carryApplicationType = '';
+                    $carryType = '';
+
                     foreach ($data as $index => $row) {
                         if ($index === 0) continue;
 
-                        $studentId      = trim($row[$map['student_id']] ?? '');
-                        $studentName    = trim($row[$map['student_name']] ?? '');
-                        $title          = trim($row[$map['title']] ?? '');
-                        $supervisorName = trim($row[$map['supervisor_name']] ?? '');
-                        $assessorName   = ($map['assessor_name'] !== null && isset($row[$map['assessor_name']]) && trim($row[$map['assessor_name']]) !== '')
-                            ? trim($row[$map['assessor_name']])
-                            : null;
+                        // Student identity is always per-row, never filled down.
+                        $studentId   = $cell($row, $map['student_id']);
+                        $studentName = $cell($row, $map['student_name']);
 
-                        $rawDomain = ($map['domain'] !== null && isset($row[$map['domain']]) && trim($row[$map['domain']]) !== '')
-                            ? trim($row[$map['domain']])
-                            : '';
+                        // Group → pair_number: inherit the previous row's group when blank.
+                        $rawPair = $cell($row, $map['pair_number']);
+                        $pairNumber = $rawPair !== '' ? (int) $rawPair : $carryPair;
+                        $carryPair = $pairNumber;
 
-                        $rawApplicationType = ($map['application_type'] !== null && isset($row[$map['application_type']]) && trim($row[$map['application_type']]) !== '')
-                            ? trim($row[$map['application_type']])
-                            : '';
+                        // Project metadata: use the row's value when present,
+                        // otherwise inherit the carried (lead-row) value.
+                        $rawTitle = $cell($row, $map['title']);
+                        $title = $rawTitle !== '' ? $rawTitle : $carryTitle;
+                        $carryTitle = $title;
 
-                        $pairNumber = ($map['pair_number'] !== null && isset($row[$map['pair_number']]) && trim($row[$map['pair_number']]) !== '')
-                            ? (int) trim($row[$map['pair_number']])
-                            : null;
+                        $rawSupervisor = $cell($row, $map['supervisor_name']);
+                        $supervisorName = $rawSupervisor !== '' ? $rawSupervisor : $carrySupervisor;
+                        $carrySupervisor = $supervisorName;
+
+                        $rawAssessor = $cell($row, $map['assessor_name']);
+                        $assessor = $rawAssessor !== '' ? $rawAssessor : $carryAssessor;
+                        $carryAssessor = $assessor;
+                        $assessorName = $assessor !== '' ? $assessor : null;
+
+                        $rawDomain = $cell($row, $map['domain']);
+                        $domain = $rawDomain !== '' ? $rawDomain : $carryDomain;
+                        $carryDomain = $domain;
+
+                        $rawApplicationType = $cell($row, $map['application_type']);
+                        $applicationType = $rawApplicationType !== '' ? $rawApplicationType : $carryApplicationType;
+                        $carryApplicationType = $applicationType;
+
+                        $rawType = $cell($row, $map['is_ifyp']);
+                        $type = $rawType !== '' ? $rawType : $carryType;
+                        $carryType = $type;
+
+                        // A studentless "lead" row carries a project's metadata for the
+                        // following partner row but must not create a record of its own.
+                        if ($studentId === '') {
+                            continue;
+                        }
 
                         $fields = [
                             'student_name'     => $studentName,
@@ -179,8 +220,9 @@
                             'title'            => $title,
                             'supervisor_name'  => $supervisorName,
                             'assessor_name'    => $assessorName,
-                            'domain'           => $this->normalizeDomain($rawDomain),
-                            'application_type' => $this->normalizeApplicationType($rawApplicationType),
+                            'domain'           => $this->normalizeDomain($domain),
+                            'application_type' => $this->normalizeApplicationType($applicationType),
+                            'is_ifyp'          => $this->normalizeIfyp($type),
                             'fyp_phase'        => $this->phase,
                             'semester'         => $this->semester,
                             'pair_number'      => $pairNumber,
