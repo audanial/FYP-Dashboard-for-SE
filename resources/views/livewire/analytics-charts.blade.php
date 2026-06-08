@@ -39,16 +39,18 @@ $summaryStats = computed(function () {
         ->get()
         ->filter(fn($p) => $this->phase === 'all' || $p->fyp_phase === $this->phase);
 
-    $total           = $projects->count();
+    $students        = $projects->count();
+    $pairs           = $projects->pluck('pair_number')->filter()->unique()->count();
     $industrial      = $projects->filter(fn($p) => (bool) $p->is_ifyp)->count();
     $supervisorCount = $projects->pluck('supervisor_name')->filter()->unique()->count();
 
     return [
-        'total'              => $total,
+        'students'           => $students,
+        'pairs'              => $pairs,
         'industrial'         => $industrial,
-        'industrial_pct'     => $total > 0 ? round($industrial / $total * 100) : 0,
+        'industrial_pct'     => $students > 0 ? round($industrial / $students * 100) : 0,
         'domains_covered'    => $projects->pluck('domain')->filter()->unique()->count(),
-        'avg_per_supervisor' => $supervisorCount > 0 ? round($total / $supervisorCount, 1) : 0,
+        'avg_per_supervisor' => $supervisorCount > 0 ? round($pairs / $supervisorCount, 1) : 0,
     ];
 });
 
@@ -115,7 +117,7 @@ $updatedPhase = function () {
 
         <div class="bg-white rounded-xl border border-indigo-100 p-4 shadow-sm">
             <p class="text-xs font-semibold uppercase tracking-wide text-indigo-500">Total Pairs</p>
-            <p class="mt-2 text-3xl font-bold text-indigo-900">{{ $this->summaryStats['total'] }}</p>
+            <p class="mt-2 text-3xl font-bold text-indigo-900">{{ $this->summaryStats['pairs'] }}</p>
             <p class="mt-1 text-xs text-gray-400">{{ $phase === 'all' ? 'all phases' : $phase }}</p>
         </div>
 
