@@ -62,8 +62,10 @@ test('supervisor workload plots distinct pairs per supervisor, not student rows'
     makeAnalyticsProject(3, 'Dr. Beta');
     makeAnalyticsProject(3, 'Dr. Beta');
 
-    // All 6 seeded rows are FYP 1 — so phase='FYP 1' still shows both supervisors.
-    // We set phase to 'FYP 1' (from default 'all') to trigger updatedPhase dispatch.
+    // Trigger the chart payload via ->set('phase', ...) rather than ->call('updatedPhase'):
+    // Livewire forbids calling updated* lifecycle hooks directly, so we fire the hook as a
+    // side-effect of the property change. All 6 rows are FYP 1, so phase='FYP 1' (from the
+    // default 'all') still surfaces both supervisors in the dispatched payload.
     Livewire::test('analytics-charts')
         ->set('phase', 'FYP 1')
         ->assertDispatched('charts-updated', fn ($name, $params) =>
