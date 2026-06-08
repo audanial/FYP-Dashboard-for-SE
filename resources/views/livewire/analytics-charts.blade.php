@@ -59,7 +59,7 @@ $supervisorWorkload = computed(function () {
         ->get()
         ->filter(fn($p) => $this->phase === 'all' || $p->fyp_phase === $this->phase)
         ->groupBy(fn($p) => $p->supervisor_name ?: 'Unknown')
-        ->map(fn($group) => $group->count())
+        ->map(fn($group) => $group->pluck('pair_number')->filter()->unique()->count())
         ->sortDesc();
 });
 

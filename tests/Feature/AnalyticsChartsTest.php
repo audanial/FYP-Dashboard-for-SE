@@ -49,3 +49,25 @@ test('industrial percentage stays based on student count, not pairs', function (
         ->assertSee('25% of cohort')                // 1/4 students = 25% (NOT 1/2 pairs = 50%)
         ->assertDontSee('50% of cohort');
 });
+
+test('supervisor workload plots distinct pairs per supervisor, not student rows', function () {
+    $this->actingAs(User::factory()->create(['role' => 'coordinator']));
+
+    // Dr. Alpha supervises 2 pairs (4 students); Dr. Beta supervises 1 pair (2 students).
+    // NOTE: the shared helper was renamed to makeAnalyticsProject in Task 1 (review feedback).
+    makeAnalyticsProject(1, 'Dr. Alpha');
+    makeAnalyticsProject(1, 'Dr. Alpha');
+    makeAnalyticsProject(2, 'Dr. Alpha');
+    makeAnalyticsProject(2, 'Dr. Alpha');
+    makeAnalyticsProject(3, 'Dr. Beta');
+    makeAnalyticsProject(3, 'Dr. Beta');
+
+    // All 6 seeded rows are FYP 1 — so phase='FYP 1' still shows both supervisors.
+    // We set phase to 'FYP 1' (from default 'all') to trigger updatedPhase dispatch.
+    Livewire::test('analytics-charts')
+        ->set('phase', 'FYP 1')
+        ->assertDispatched('charts-updated', fn ($name, $params) =>
+            $params['supervisorLabels'] === ['Dr. Alpha', 'Dr. Beta']
+            && $params['supervisorValues'] === [2, 1] // pairs, sorted desc — NOT [4, 2] students
+        );
+});
