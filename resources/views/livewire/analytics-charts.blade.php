@@ -45,7 +45,7 @@ $summaryStats = computed(function () {
     $supervisorCount = $projects->pluck('supervisor_name')->filter()->unique()->count();
 
     return [
-        'students'           => $students,
+        'students'           => $students, // denominator for industrial_pct; not rendered directly
         'pairs'              => $pairs,
         'industrial'         => $industrial,
         'industrial_pct'     => $students > 0 ? round($industrial / $students * 100) : 0,
