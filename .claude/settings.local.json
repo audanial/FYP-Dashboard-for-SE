@@ -40,7 +40,9 @@
       "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/CsvImportRealFormatTest.php tests/Feature/CsvHeaderResolverRealFormatTest.php --compact)",
       "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest --compact 2>$null | Select-Object -Last 8)",
       "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/CsvImportEncodingTest.php)",
-      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/CsvImportRealFormatTest.php tests/Feature/CsvHeaderResolverRealFormatTest.php tests/Feature/CsvImportEncodingTest.php --compact)"
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/CsvImportRealFormatTest.php tests/Feature/CsvHeaderResolverRealFormatTest.php tests/Feature/CsvImportEncodingTest.php --compact)",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/SupervisorRelationTest.php --compact)",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/SupervisorRelationTest.php)"
     ]
   }
 }

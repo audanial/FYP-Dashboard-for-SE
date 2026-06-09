@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FypProject extends Model
 {
@@ -33,5 +34,15 @@ class FypProject extends Model
         'phase',
         'semester',
         'pair_number',
+        'supervisor_id',
     ];
+
+    /**
+     * The supervisor (user) this project is assigned to, when linked.
+     * Nullable: legacy/unmatched rows have supervisor_id = null.
+     */
+    public function supervisor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'supervisor_id');
+    }
 }
