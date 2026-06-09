@@ -32,7 +32,15 @@
       "PowerShell($php = \\(Get-Command php -ErrorAction SilentlyContinue\\).Source; if \\(-not $php\\) { $cand = Get-ChildItem \"$env:USERPROFILE\\\\.config\\\\herd\\\\bin\\\\php.bat\",\"$env:USERPROFILE\\\\.config\\\\herd\\\\bin\\\\php.exe\" -ErrorAction SilentlyContinue | Select-Object -First 1; if \\($cand\\) { $php = $cand.FullName } }; \"PHP: $php\")",
       "PowerShell($php = \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\"; & $php -r \"@\\\\$db=new PDO\\('sqlite:C:/Users/amir umar danial/Herd/fyp-dashboard/database/database.sqlite'\\); echo \\\\$db->query\\(\\\\\"SELECT sql FROM sqlite_master WHERE name='fyp_projects'\\\\\"\\)->fetchColumn\\(\\);\" 2>&1)",
       "PowerShell(Get-ChildItem *)",
-      "Bash($PHP *)"
+      "Bash($PHP *)",
+      "PowerShell($env:TEMP; \"---\"; & \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" -r \"echo 'php ok';\")",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" \"C:\\\\conda_temp\\\\fyp_sup_investigation.php\")",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" \"C:\\\\conda_temp\\\\fyp_sup_investigation.php\" | Select-Object -Last 18)",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest --filter=\"CsvImportRealFormat|CsvHeaderResolverRealFormat\" --compact 2>&1 | Select-Object -Last 40)",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/CsvImportRealFormatTest.php tests/Feature/CsvHeaderResolverRealFormatTest.php --compact)",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest --compact 2>$null | Select-Object -Last 8)",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/CsvImportEncodingTest.php)",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/CsvImportRealFormatTest.php tests/Feature/CsvHeaderResolverRealFormatTest.php tests/Feature/CsvImportEncodingTest.php --compact)"
     ]
   }
 }

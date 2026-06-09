@@ -2,6 +2,7 @@
         <?php
         use App\Models\FypProject;
         use App\Services\CsvHeaderResolver;
+        use App\Support\Encoding;
         use Illuminate\Support\Facades\Auth;
         use Illuminate\Support\Facades\DB;
         use function Livewire\Volt\{state, computed, usesFileUploads, usesPagination, updated};
@@ -137,6 +138,19 @@
             if (empty($data)) {
                 $this->reset('csvFile');
                 return;
+            }
+
+            // Normalise encoding before anything reads the cells: strip a leading
+            // UTF-8 BOM (which would otherwise break the first header), then coerce
+            // any non-UTF-8 bytes (the real CSV is Windows-1252) to clean UTF-8 so
+            // supervisor names store and display without mojibake.
+            $data[0][0] = Encoding::stripBom((string) ($data[0][0] ?? ''));
+            foreach ($data as $r => $row) {
+                foreach ($row as $c => $value) {
+                    if (is_string($value)) {
+                        $data[$r][$c] = Encoding::toUtf8($value);
+                    }
+                }
             }
 
             $resolver = app(CsvHeaderResolver::class);
