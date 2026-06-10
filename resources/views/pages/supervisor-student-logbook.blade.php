@@ -18,9 +18,25 @@ new #[Title('Student Logbook')] class extends Component {
 
     public function mount(string $studentId): void
     {
+        $supervisorId = Auth::id();
+        $supervisorName = Auth::user()->name;
+
         $this->project = FypProject::query()
             ->where('student_id', $studentId)
-            ->where('supervisor_name', Auth::user()->name)
+            ->where(function ($query) use ($supervisorId, $supervisorName) {
+                // Dual-read during the supervisor_id transition: prefer the
+                // structural FK, falling back to the legacy name match only for
+                // rows not yet linked. ID precedence is mandatory — a project
+                // owned by another supervisor must never be reachable through a
+                // coincidental name match. firstOrFail keeps the gate fail-closed.
+                $query
+                    ->where('supervisor_id', $supervisorId)
+                    ->orWhere(function ($fallback) use ($supervisorName) {
+                        $fallback
+                            ->whereNull('supervisor_id')
+                            ->where('supervisor_name', $supervisorName);
+                    });
+            })
             ->firstOrFail();
 
         $this->student = User::query()
