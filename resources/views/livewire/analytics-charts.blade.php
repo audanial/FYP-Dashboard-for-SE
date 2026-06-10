@@ -4,6 +4,24 @@ use function Livewire\Volt\{state, computed};
 
 state(['semester' => 'MARCH 2026', 'phase' => 'all']);
 
+/*
+ * Effective supervisor key used for all supervisor-based grouping and counting
+ * during the supervisor_id transition:
+ *   A) supervisor_id set and the relation resolves -> linked user's name
+ *      (canonical; collapses string duplicates like "Noor Widasuria" x2)
+ *   B) else supervisor_name present                -> supervisor_name
+ *   C) else                                        -> "Unlinked"
+ * The relation is eager-loaded (with('supervisor')) wherever this is used to
+ * avoid N+1 queries.
+ */
+$effectiveSupervisorKey = function (FypProject $project): string {
+    if ($project->supervisor_id && $project->supervisor) {
+        return $project->supervisor->name;
+    }
+
+    return $project->supervisor_name ?: 'Unlinked';
+};
+
 $domainStats = computed(function () {
     return FypProject::where('semester', $this->semester)
         ->get()
@@ -34,15 +52,16 @@ $ifypStats = computed(function () {
     ]);
 });
 
-$summaryStats = computed(function () {
-    $projects = FypProject::where('semester', $this->semester)
+$summaryStats = computed(function () use ($effectiveSupervisorKey) {
+    $projects = FypProject::with('supervisor')
+        ->where('semester', $this->semester)
         ->get()
         ->filter(fn($p) => $this->phase === 'all' || $p->fyp_phase === $this->phase);
 
     $students        = $projects->count();
     $pairs           = $projects->pluck('pair_number')->filter()->unique()->count();
     $industrial      = $projects->filter(fn($p) => (bool) $p->is_ifyp)->count();
-    $supervisorCount = $projects->pluck('supervisor_name')->filter()->unique()->count();
+    $supervisorCount = $projects->map($effectiveSupervisorKey)->unique()->count();
 
     return [
         'students'           => $students, // denominator for industrial_pct; not rendered directly
@@ -54,11 +73,12 @@ $summaryStats = computed(function () {
     ];
 });
 
-$supervisorWorkload = computed(function () {
-    return FypProject::where('semester', $this->semester)
+$supervisorWorkload = computed(function () use ($effectiveSupervisorKey) {
+    return FypProject::with('supervisor')
+        ->where('semester', $this->semester)
         ->get()
         ->filter(fn($p) => $this->phase === 'all' || $p->fyp_phase === $this->phase)
-        ->groupBy(fn($p) => $p->supervisor_name ?: 'Unknown')
+        ->groupBy($effectiveSupervisorKey)
         ->map(fn($group) => $group->pluck('pair_number')->filter()->unique()->count())
         ->sortDesc();
 });
