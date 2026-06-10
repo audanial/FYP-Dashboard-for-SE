@@ -17,8 +17,23 @@ updated([
 ]);
 
 $projects = computed(function () {
+    $supervisorId = Auth::id();
+    $supervisorName = Auth::user()->name;
+
     return FypProject::query()
-        ->where('supervisor_name', Auth::user()->name)
+        ->where(function ($query) use ($supervisorId, $supervisorName) {
+            // Dual-read during the supervisor_id transition: prefer the structural
+            // FK, and fall back to the legacy name match only for rows not yet
+            // linked. ID precedence is mandatory — a row owned by another
+            // supervisor must never surface through a coincidental name match.
+            $query
+                ->where('supervisor_id', $supervisorId)
+                ->orWhere(function ($fallback) use ($supervisorName) {
+                    $fallback
+                        ->whereNull('supervisor_id')
+                        ->where('supervisor_name', $supervisorName);
+                });
+        })
         ->where(function ($query) {
             $query
                 ->where('student_name', 'like', '%'.$this->search.'%')
