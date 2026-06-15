@@ -60,3 +60,24 @@ test('a non-coordinator cannot create a supervisor', function () {
         ->call('createSupervisor')
         ->assertForbidden();
 });
+
+// ── Task 3: modal UI ──────────────────────────────────────────────────────────
+
+test('the page header renders a create supervisor button', function () {
+    Livewire::test('user-management')
+        ->assertSee('Create supervisor');
+});
+
+test('the create supervisor modal renders name and email input bindings', function () {
+    Livewire::test('user-management')
+        ->assertSeeHtml('wire:model="newName"')
+        ->assertSeeHtml('wire:model="newEmail"');
+});
+
+test('the temp password block is rendered after a supervisor is created', function () {
+    Livewire::test('user-management')
+        ->set('newName', 'UI Sup')
+        ->set('newEmail', 'uisup@unikl.edu.my')
+        ->call('createSupervisor')
+        ->assertSee('Temporary password');
+});

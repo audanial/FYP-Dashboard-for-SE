@@ -208,9 +208,16 @@ $createSupervisor = function () {
                 <h1 class="text-xl font-bold text-gray-900">Manage Users</h1>
                 <p class="mt-1 text-sm text-gray-500">View and manage all registered users in the FYP system.</p>
             </div>
-            <div class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                <span class="inline-block h-2 w-2 rounded-full bg-green-500"></span>
-                <span class="text-xs font-medium text-gray-600">FYP Coordinator</span>
+            <div class="flex items-center gap-3">
+                <button wire:click="openCreateModal"
+                        type="button"
+                        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
+                    + Create supervisor
+                </button>
+                <div class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                    <span class="inline-block h-2 w-2 rounded-full bg-green-500"></span>
+                    <span class="text-xs font-medium text-gray-600">FYP Coordinator</span>
+                </div>
             </div>
         </div>
     </div>
@@ -702,6 +709,97 @@ $createSupervisor = function () {
                         type="button"
                         class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-700">
                     Remove
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    {{-- ④ CREATE SUPERVISOR MODAL --}}
+    <div x-show="$wire.showCreateModal"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+         style="display: none;">
+        <div x-show="$wire.showCreateModal"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             @click.stop
+             class="relative w-full max-w-md rounded-xl bg-white shadow-xl">
+
+            {{-- Header --}}
+            <div class="flex items-start justify-between border-b border-gray-100 px-6 py-4">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900">Create supervisor account</h2>
+                    <p class="mt-0.5 text-sm text-gray-500">Role is set to supervisor and account is active immediately.</p>
+                </div>
+                <button @click="$wire.set('showCreateModal', false)"
+                        type="button"
+                        class="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Body --}}
+            <div class="space-y-4 px-6 py-4">
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Full Name</label>
+                    <input wire:model="newName"
+                           type="text"
+                           class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                    @error('newName') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Email</label>
+                    <input wire:model="newEmail"
+                           type="email"
+                           class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                    @error('newEmail') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Department / Programme</label>
+                    <input wire:model="newDepartment"
+                           type="text"
+                           class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                </div>
+
+                @if($newTempPassword)
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                        <p class="font-semibold">Temporary password (shown once):</p>
+                        <code class="mt-1 block break-all font-mono text-amber-900">{{ $newTempPassword }}</code>
+                        <p class="mt-1 text-xs">Copy it now and share it securely. It will not be shown again.</p>
+                    </div>
+                @endif
+
+            </div>
+
+            {{-- Footer --}}
+            <div class="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
+                <button @click="$wire.set('showCreateModal', false)"
+                        type="button"
+                        class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+                    Close
+                </button>
+                <button wire:click="createSupervisor"
+                        wire:loading.attr="disabled"
+                        wire:target="createSupervisor"
+                        wire:loading.class="opacity-50 cursor-not-allowed"
+                        type="button"
+                        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
+                    Create account
                 </button>
             </div>
 
