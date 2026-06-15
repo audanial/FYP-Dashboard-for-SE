@@ -59,6 +59,23 @@ $stats = computed(fn() => [
 
 $supervisors = computed(fn() => User::where('role', 'supervisor')->orderBy('name')->get());
 
+$unlinkedSupervisors = computed(function () {
+    return FypProject::query()
+        ->whereNull('supervisor_id')
+        ->whereNotNull('supervisor_name')
+        ->where('supervisor_name', '!=', '')
+        ->selectRaw('supervisor_name, COUNT(*) as student_count, COUNT(DISTINCT pair_number) as pair_count')
+        ->groupBy('supervisor_name')
+        ->orderBy('supervisor_name')
+        ->get()
+        ->map(fn ($r) => [
+            'supervisor_name' => $r->supervisor_name,
+            'student_count'   => (int) $r->student_count,
+            'pair_count'      => (int) $r->pair_count,
+        ])
+        ->all();
+});
+
 // ── Edit modal ───────────────────────────────────────────────────────────────
 
 $openEditModal = function ($userId) {
@@ -298,6 +315,36 @@ $createSupervisor = function () {
         </div>
 
     </div>
+
+    {{-- ② UNLINKED SUPERVISORS PANEL --}}
+    @if(count($this->unlinkedSupervisors) > 0)
+    <div class="border-b border-gray-100 px-6 py-5">
+        <div class="flex items-center gap-2">
+            <h2 class="text-sm font-semibold text-gray-900">Unlinked supervisors</h2>
+            <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                {{ count($this->unlinkedSupervisors) }}
+            </span>
+        </div>
+        <p class="mt-1 text-xs text-gray-500">Names imported from CSV that are not yet linked to an account. Linking writes supervisor_id for the whole pair.</p>
+        <div class="mt-3 divide-y divide-gray-50 rounded-lg border border-gray-200">
+            @foreach($this->unlinkedSupervisors as $u)
+                <div class="flex items-center justify-between px-4 py-2.5">
+                    <div>
+                        <span class="text-sm font-medium text-gray-800">{{ $u['supervisor_name'] }}</span>
+                        <span class="ml-2 text-xs text-gray-400">
+                            {{ $u['student_count'] }} student(s) · {{ $u['pair_count'] }} pair(s)
+                        </span>
+                    </div>
+                    <button wire:click="openLinkModal(@js($u['supervisor_name']))"
+                            type="button"
+                            class="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50">
+                        Link to existing
+                    </button>
+                </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
 
     {{-- ③ FILTER TABS + SEARCH --}}
     <div class="flex flex-col gap-4 border-b border-gray-100 px-6 py-4 md:flex-row md:items-center md:justify-between">
