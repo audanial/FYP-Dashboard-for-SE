@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\FypProject;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class FypProjectFactory extends Factory
@@ -47,5 +48,19 @@ class FypProjectFactory extends Factory
             'fyp_phase' => $this->faker->randomElement(['FYP 1', 'FYP 2']),
             'semester' => 'MARCH 2026',
         ];
+    }
+
+    /**
+     * Create a project structurally linked to a supervisor: sets supervisor_id
+     * and copies the user's canonical name into supervisor_name (the linked,
+     * name-consistent case). Explicitly defined to override Laravel's magic
+     * `for<Relationship>` method resolution.
+     */
+    public function forSupervisor(User $supervisor): static
+    {
+        return $this->state(fn () => [
+            'supervisor_id'   => $supervisor->id,
+            'supervisor_name' => $supervisor->name,
+        ]);
     }
 }
