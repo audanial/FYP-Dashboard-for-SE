@@ -26,6 +26,18 @@ test('coordinator creates a supervisor with role forced to supervisor and accoun
         ->and((bool) $created->is_active)->toBeTrue();
 });
 
+test('coordinator-provisioned supervisor is email-verified immediately', function () {
+    Livewire::test('user-management')
+        ->set('newName', 'Verified Sup')
+        ->set('newEmail', 'verified@unikl.edu.my')
+        ->call('createSupervisor')
+        ->assertHasNoErrors();
+
+    $created = User::where('email', 'verified@unikl.edu.my')->first();
+
+    expect($created->email_verified_at)->not->toBeNull();
+});
+
 test('createSupervisor surfaces a one-time temp password and stores it hashed', function () {
     $component = Livewire::test('user-management')
         ->set('newName', 'New Sup')

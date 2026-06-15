@@ -205,7 +205,7 @@ $createSupervisor = function () {
 
     $temp = Str::password(16);
 
-    User::create([
+    $supervisor = User::create([
         'name'       => $this->newName,
         'email'      => $this->newEmail,
         'role'       => 'supervisor',
@@ -213,6 +213,12 @@ $createSupervisor = function () {
         'department' => $this->newDepartment ?: null,
         'password'   => Hash::make($temp),
     ]);
+
+    // Coordinator vouches for this address — mark verified immediately.
+    // email_verified_at is not fillable (guards against user-supplied input),
+    // so we set it via direct assignment after creation.
+    $supervisor->email_verified_at = now();
+    $supervisor->save();
 
     // Surfaced once via state; never written to session/logs.
     $this->newTempPassword = $temp;

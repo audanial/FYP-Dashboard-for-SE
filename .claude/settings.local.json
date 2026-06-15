@@ -42,7 +42,17 @@
       "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/CsvImportEncodingTest.php)",
       "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/CsvImportRealFormatTest.php tests/Feature/CsvHeaderResolverRealFormatTest.php tests/Feature/CsvImportEncodingTest.php --compact)",
       "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/SupervisorRelationTest.php --compact)",
-      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/SupervisorRelationTest.php)"
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests/Feature/SupervisorRelationTest.php)",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests\\\\Feature\\\\SupervisorIdentityTest.php)",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests\\\\Feature\\\\SupervisorIdentityTest.php tests\\\\Feature\\\\SupervisorStudentsTest.php tests\\\\Feature\\\\SupervisorStudentLogbookTest.php)",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest)",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests\\\\Feature\\\\SupervisorStudentLogbookTest.php)",
+      "PowerShell(& \"C:\\\\Users\\\\amir umar danial\\\\.config\\\\herd\\\\bin\\\\php.bat\" vendor\\\\bin\\\\pest tests\\\\Feature\\\\AnalyticsChartsTest.php)",
+      "PowerShell(git *)",
+      "Bash(./vendor/bin/pest tests/Feature/SupervisorLinkingTest.php)",
+      "PowerShell(php ./vendor/bin/pest tests/Feature/SupervisorLinkingTest.php)",
+      "PowerShell(php ./vendor/bin/pest 2>&1 | Select-Object -Last 12)",
+      "PowerShell(cd \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\" ; Get-ChildItem database\\\\migrations | Where-Object { $_.Name -match \"user\" } | Select-Object Name | Sort-Object Name)"
     ]
   }
 }

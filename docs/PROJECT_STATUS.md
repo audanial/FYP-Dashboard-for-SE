@@ -31,7 +31,7 @@ their own logbook.
 | | |
 |---|---|
 | **Current sprint** | Sprint 4 — Supervisor Identity |
-| **Current phase** | **Phase 4 — Supervisor Account Provisioning, Mapping & Backfill** in progress. Tasks 1–5 done; Tasks 6–9 not started. |
+| **Current phase** | **Phase 4 — Supervisor Account Provisioning, Mapping & Backfill** in progress. Tasks 1–5 + 5.5 done; Tasks 6–9 not started. |
 | **Current branch** | `claude/laravel-fyp-dashboard-ot8rR` |
 | **Working tree** | Clean except an incidental `.claude/settings.local.json` (harness permissions; not application code). |
 
@@ -110,8 +110,8 @@ All phases below are implemented, test-covered (TDD: RED → GREEN), and committ
 
 ## Test Status
 
-- **Full Pest suite: 127 passing (301 assertions).** Latest run 2026-06-15; green including Phase 4
-  Tasks 1–5 (`SupervisorLinkingTest` +10, `SupervisorProvisioningTest` +7).
+- **Full Pest suite: 128 passing (303 assertions).** Latest run 2026-06-15; green including Phase 4
+  Tasks 1–5 + 5.5 (`SupervisorLinkingTest` +10, `SupervisorProvisioningTest` +8).
 - Test database is in-memory SQLite (`phpunit.xml` → `DB_DATABASE=:memory:`), so the suite never
   touches the live database.
 - Sprint 4 added 16 tests across `CsvImportEncodingTest`, `SupervisorRelationTest`,
@@ -206,4 +206,4 @@ Planned, not started — summarized for direction:
 
 ## Last Updated
 
-15 June 2026 — reconciled Sprint 4 phase numbering; added Phase 4 plan reference.
+15 June 2026 — reconciled Sprint 4 phase numbering; added Phase 4 plan reference; Tasks 1–5.5 complete (128 tests / 303 assertions).
