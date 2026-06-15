@@ -3,6 +3,8 @@
 use App\Models\FypProject;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use function Livewire\Volt\{state, computed};
 
 state([
@@ -29,6 +31,13 @@ state([
     'showDeleteModal' => false,
     'deleteUserId'    => null,
     'deleteUserName'  => '',
+
+    // Create supervisor modal
+    'showCreateModal' => false,
+    'newName'         => '',
+    'newEmail'        => '',
+    'newDepartment'   => '',
+    'newTempPassword' => null,
 ]);
 
 $filteredUsers = computed(function () {
@@ -150,6 +159,42 @@ $deleteUser = function () {
     User::findOrFail($this->deleteUserId)->delete();
     $this->showDeleteModal = false;
     session()->flash('message', 'User removed successfully!');
+};
+
+// ── Create supervisor modal ───────────────────────────────────────────────────
+
+$openCreateModal = function () {
+    abort_unless(Auth::user()?->role === 'coordinator', 403);
+    $this->newName        = '';
+    $this->newEmail       = '';
+    $this->newDepartment  = '';
+    $this->newTempPassword = null;
+    $this->showCreateModal = true;
+};
+
+$createSupervisor = function () {
+    abort_unless(Auth::user()?->role === 'coordinator', 403);
+
+    $this->validate([
+        'newName'       => 'required|string|max:255',
+        'newEmail'      => 'required|email|unique:users,email',
+        'newDepartment' => 'nullable|string|max:255',
+    ]);
+
+    $temp = Str::password(16);
+
+    User::create([
+        'name'       => $this->newName,
+        'email'      => $this->newEmail,
+        'role'       => 'supervisor',
+        'is_active'  => true,
+        'department' => $this->newDepartment ?: null,
+        'password'   => Hash::make($temp),
+    ]);
+
+    // Surfaced once via state; never written to session/logs.
+    $this->newTempPassword = $temp;
+    session()->flash('message', 'Supervisor account created.');
 };
 
 ?>
