@@ -31,7 +31,7 @@ their own logbook.
 | | |
 |---|---|
 | **Current sprint** | Sprint 4 — Supervisor Identity |
-| **Current phase** | **Phase 4 — Supervisor Account Provisioning, Mapping & Backfill** in progress. Tasks 1–7 done; Tasks 8–9 not started. |
+| **Current phase** | **Phase 4 — Supervisor Account Provisioning, Mapping & Backfill** in progress. Tasks 1–8 done; Task 9 (full-suite verification + status update) not started. |
 | **Current branch** | `claude/laravel-fyp-dashboard-ot8rR` |
 | **Working tree** | Clean except an incidental `.claude/settings.local.json` (harness permissions; not application code). |
 
@@ -110,13 +110,13 @@ All phases below are implemented, test-covered (TDD: RED → GREEN), and committ
 
 ## Test Status
 
-- **Full Pest suite: 133 passing (316 assertions).** Latest run 2026-06-19; green including Phase 4
-  Task 7 (`CsvImportSupervisorLinkTest` +3).
+- **Full Pest suite: 137 passing (328 assertions).** Latest run 2026-06-19; green including Phase 4
+  Task 8 (`LinkSupervisorsCommandTest` +4).
 - Test database is in-memory SQLite (`phpunit.xml` → `DB_DATABASE=:memory:`), so the suite never
   touches the live database.
-- Sprint 4 added 21 tests across `CsvImportEncodingTest`, `SupervisorRelationTest`,
+- Sprint 4 added 25 tests across `CsvImportEncodingTest`, `SupervisorRelationTest`,
   `SupervisorIdentityTest`, `SupervisorStudentLogbookTest`, `AnalyticsChartsTest`,
-  `UserManagementTest`, and `CsvImportSupervisorLinkTest`.
+  `UserManagementTest`, `CsvImportSupervisorLinkTest`, and `LinkSupervisorsCommandTest`.
 
 ---
 
@@ -149,7 +149,7 @@ All phases below are implemented, test-covered (TDD: RED → GREEN), and committ
   but only **1** supervisor user account. Backfill is only meaningful once coordinator-created
   accounts exist.
 - **~~CSV import write path~~** — **fixed (Task 7, 2026-06-19).** Import now sets `supervisor_id` on exact name match; omits the key (never sets null) on no-match so hand-curated links survive re-import.
-- **Reassignment write path** still name-based until Task 6 (reassign fixed) and Task 8 (backfill).
+- **~~Backfill gap~~** — **addressed (Task 8, 2026-06-19).** `php artisan fyp:link-supervisors` links all existing rows by exact name match, ignores non-supervisor accounts, is idempotent, and reports linked / unmatched / remaining counts. Run this against the live DB after coordinator provisions the missing accounts.
 - **~~Reassign partner-row bug~~** — **fixed (Task 6, 2026-06-19).** `saveReassign` now writes the
   whole pair (`supervisor_id` + canonical `supervisor_name`); unpaired rows treated as pair-of-one.
 - **Coordinator role drift (deferred to backlog):** some creation paths store coordinators as
@@ -208,4 +208,4 @@ Planned, not started — summarized for direction:
 
 ## Last Updated
 
-19 June 2026 — Phase 4 Tasks 6–7 complete: reassign writes whole pair + sets `supervisor_id`; CSV import sets `supervisor_id` on exact match with re-import guard (133 tests / 316 assertions).
+19 June 2026 — Phase 4 Tasks 6–8 complete: reassign per-pair + supervisor_id; CSV import exact-match linking; `fyp:link-supervisors` backfill command (137 tests / 328 assertions). Task 9 (final verification) pending.
