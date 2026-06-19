@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\FypProject;
 use App\Models\User;
 use Livewire\Livewire;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -101,4 +102,64 @@ it('shows Inactive badge for deactivated users', function () {
 
     Livewire::test('user-management')
         ->assertSee('Inactive');
+});
+
+// ── Reassign supervisor — pair semantics + supervisor_id ──────────────────────
+
+it('reassign updates the whole pair and sets supervisor_id + canonical name', function () {
+    $newSup = User::factory()->create(['role' => 'supervisor', 'name' => 'New Supervisor']);
+    $student = User::factory()->create(['role' => 'student', 'username' => 'S001']);
+
+    FypProject::factory()->create([
+        'student_id'      => 'S001',
+        'semester'        => 'MARCH 2026',
+        'pair_number'     => 7,
+        'supervisor_name' => 'Old Name',
+        'supervisor_id'   => null,
+    ]);
+    FypProject::factory()->create([
+        'student_id'      => 'S002',
+        'semester'        => 'MARCH 2026',
+        'pair_number'     => 7,
+        'supervisor_name' => 'Old Name',
+        'supervisor_id'   => null,
+    ]);
+
+    Livewire::test('user-management')
+        ->call('openReassignModal', $student->id)
+        ->set('reassignNewSupId', $newSup->id)
+        ->call('saveReassign')
+        ->assertHasNoErrors();
+
+    $pair = FypProject::where('semester', 'MARCH 2026')->where('pair_number', 7)->get();
+    expect($pair)->toHaveCount(2)
+        ->and($pair->every(fn ($p) => $p->supervisor_id === $newSup->id))->toBeTrue()
+        ->and($pair->every(fn ($p) => $p->supervisor_name === 'New Supervisor'))->toBeTrue();
+});
+
+it('reassign on an unpaired student updates only that student row', function () {
+    $newSup  = User::factory()->create(['role' => 'supervisor', 'name' => 'Solo Sup']);
+    $student = User::factory()->create(['role' => 'student', 'username' => 'S010']);
+
+    FypProject::factory()->create([
+        'student_id'      => 'S010',
+        'pair_number'     => null,
+        'supervisor_name' => 'Old',
+        'supervisor_id'   => null,
+    ]);
+    FypProject::factory()->create([
+        'student_id'      => 'S011',
+        'pair_number'     => null,
+        'supervisor_name' => 'Old',
+        'supervisor_id'   => null,
+    ]);
+
+    Livewire::test('user-management')
+        ->call('openReassignModal', $student->id)
+        ->set('reassignNewSupId', $newSup->id)
+        ->call('saveReassign')
+        ->assertHasNoErrors();
+
+    expect(FypProject::where('student_id', 'S010')->first()->supervisor_id)->toBe($newSup->id)
+        ->and(FypProject::where('student_id', 'S011')->first()->supervisor_id)->toBeNull();
 });

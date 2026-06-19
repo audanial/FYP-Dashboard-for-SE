@@ -31,7 +31,7 @@ their own logbook.
 | | |
 |---|---|
 | **Current sprint** | Sprint 4 — Supervisor Identity |
-| **Current phase** | **Phase 4 — Supervisor Account Provisioning, Mapping & Backfill** in progress. Tasks 1–5 + 5.5 done; Tasks 6–9 not started. |
+| **Current phase** | **Phase 4 — Supervisor Account Provisioning, Mapping & Backfill** in progress. Tasks 1–6 done; Tasks 7–9 not started. |
 | **Current branch** | `claude/laravel-fyp-dashboard-ot8rR` |
 | **Working tree** | Clean except an incidental `.claude/settings.local.json` (harness permissions; not application code). |
 
@@ -110,12 +110,13 @@ All phases below are implemented, test-covered (TDD: RED → GREEN), and committ
 
 ## Test Status
 
-- **Full Pest suite: 128 passing (303 assertions).** Latest run 2026-06-15; green including Phase 4
-  Tasks 1–5 + 5.5 (`SupervisorLinkingTest` +10, `SupervisorProvisioningTest` +8).
+- **Full Pest suite: 130 passing (310 assertions).** Latest run 2026-06-19; green including Phase 4
+  Task 6 (`UserManagementTest` +2 reassign tests).
 - Test database is in-memory SQLite (`phpunit.xml` → `DB_DATABASE=:memory:`), so the suite never
   touches the live database.
-- Sprint 4 added 16 tests across `CsvImportEncodingTest`, `SupervisorRelationTest`,
-  `SupervisorIdentityTest`, `SupervisorStudentLogbookTest`, and `AnalyticsChartsTest`.
+- Sprint 4 added 18 tests across `CsvImportEncodingTest`, `SupervisorRelationTest`,
+  `SupervisorIdentityTest`, `SupervisorStudentLogbookTest`, `AnalyticsChartsTest`, and
+  `UserManagementTest`.
 
 ---
 
@@ -148,8 +149,8 @@ All phases below are implemented, test-covered (TDD: RED → GREEN), and committ
   but only **1** supervisor user account. Backfill is only meaningful once coordinator-created
   accounts exist.
 - **Write paths still name-based.** CSV import and reassignment do not set `supervisor_id`.
-- **Reassign partner-row bug:** `user-management.blade.php` updates a single student's
-  `supervisor_name`, not the whole pair.
+- **~~Reassign partner-row bug~~** — **fixed (Task 6, 2026-06-19).** `saveReassign` now writes the
+  whole pair (`supervisor_id` + canonical `supervisor_name`); unpaired rows treated as pair-of-one.
 - **Coordinator role drift (deferred to backlog):** some creation paths store coordinators as
   `role = 'admin'` while middleware checks `hasRole('coordinator')`. Currently dormant (the live
   coordinator is `'coordinator'`), but latent.
@@ -206,4 +207,4 @@ Planned, not started — summarized for direction:
 
 ## Last Updated
 
-15 June 2026 — reconciled Sprint 4 phase numbering; added Phase 4 plan reference; Tasks 1–5.5 complete (128 tests / 303 assertions).
+19 June 2026 — Phase 4 Task 6 complete: `saveReassign` now writes the whole pair and sets `supervisor_id`; `UserManagementTest` +2 (130 tests / 310 assertions).

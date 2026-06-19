@@ -150,9 +150,25 @@ $saveReassign = function () {
     abort_unless($supervisor->role === 'supervisor', 422);
 
     $student = User::findOrFail($this->reassignUserId);
-    if ($student->username) {
-        FypProject::where('student_id', $student->username)
-            ->update(['supervisor_name' => $supervisor->name]);
+    $project = $student->username
+        ? FypProject::where('student_id', $student->username)->first()
+        : null;
+
+    if ($project) {
+        // Reassignment changes ownership — set both FK and canonical name for
+        // the whole pair (paired rows share semester + pair_number; unpaired
+        // rows are treated as a pair of one, matched by id only).
+        FypProject::query()
+            ->when(
+                $project->pair_number !== null,
+                fn ($q) => $q->where('semester', $project->semester)
+                             ->where('pair_number', $project->pair_number),
+                fn ($q) => $q->where('id', $project->id),
+            )
+            ->update([
+                'supervisor_id'   => $supervisor->id,
+                'supervisor_name' => $supervisor->name,
+            ]);
     }
 
     $this->showReassignModal = false;
