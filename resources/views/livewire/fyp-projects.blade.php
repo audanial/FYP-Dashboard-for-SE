@@ -172,6 +172,12 @@
                     // Read a mapped cell as a trimmed string ('' when unmapped/missing).
                     $cell = fn (array $row, ?int $i): string => ($i !== null && isset($row[$i])) ? trim($row[$i]) : '';
 
+                    // Build once per import: supervisor name → user id (role=supervisor only).
+                    // Used below to set supervisor_id on exact match. Queried here so the
+                    // lookup is a single query rather than one per row.
+                    $supervisorIdByName = \App\Models\User::where('role', 'supervisor')
+                        ->pluck('id', 'name');
+
                     // Carried project metadata. A partner/continuation row whose
                     // Group, title, supervisor, etc. are blank inherits the last
                     // seen value from the pair's lead row (forward-fill).
@@ -241,6 +247,13 @@
                             'semester'         => $this->semester,
                             'pair_number'      => $pairNumber,
                         ];
+
+                        // Only set supervisor_id when the CSV name exactly matches a
+                        // supervisor account. Intentionally omitted (not set to null) on
+                        // no-match so that updateOrCreate never overwrites a hand-curated link.
+                        if (isset($supervisorIdByName[$supervisorName])) {
+                            $fields['supervisor_id'] = $supervisorIdByName[$supervisorName];
+                        }
 
                         if ($duplicateMode === 'update') {
                             FypProject::updateOrCreate(['student_id' => $studentId], $fields);
