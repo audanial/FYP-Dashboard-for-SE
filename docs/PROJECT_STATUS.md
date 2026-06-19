@@ -31,7 +31,7 @@ their own logbook.
 | | |
 |---|---|
 | **Current sprint** | Sprint 4 — Supervisor Identity |
-| **Current phase** | **Phase 4 — Supervisor Account Provisioning, Mapping & Backfill** in progress. Tasks 1–8 done; Task 9 (full-suite verification + status update) not started. |
+| **Current phase** | **Phase 4 — Supervisor Account Provisioning, Mapping & Backfill** ✅ complete (`c20cdef`→`adb28ab`). Phase 5 (dual-read retirement) is next. |
 | **Current branch** | `claude/laravel-fyp-dashboard-ot8rR` |
 | **Working tree** | Clean except an incidental `.claude/settings.local.json` (harness permissions; not application code). |
 
@@ -48,8 +48,8 @@ numbering below; the roadmap's original numbers are shown for cross-reference.
 | **Phase 1** — Encoding stabilization | ✅ done (`8bea149`) | Phase 1 |
 | **Phase 2** — `supervisor_id` foundation (FK + relations) | ✅ done (`3e54f50`) | Phase 2 |
 | **Phase 3** — Identity reads / dual-read (3.1 My Students, 3.2 Logbook, 3.3 Analytics) | ✅ done (`38a9c11`, `448cefc`, `7eee670`) | Phase 3 + Phase 4 |
-| **Phase 4** — Supervisor Account Provisioning, Mapping & Backfill | ⏳ next — **planned** (`docs/superpowers/plans/2026-06-15-sprint-4-phase-4-provisioning-mapping-backfill.md`) | Phase 5 + Phase 6 |
-| **Phase 5** — Verification & dual-read retirement criteria | ⬜ planned | Phase 7 |
+| **Phase 4** — Supervisor Account Provisioning, Mapping & Backfill | ✅ done (`c20cdef`→`adb28ab`) | Phase 5 + Phase 6 |
+| **Phase 5** — Dual-read retirement (remove name fallback once null-count = 0) | ⬜ planned | Phase 7 |
 
 **Why this sprint exists.** Supervisor→project ownership was historically resolved by exact
 string match between `users.name` and `fyp_projects.supervisor_name`. Real names diverge (e.g.
@@ -106,17 +106,28 @@ All phases below are implemented, test-covered (TDD: RED → GREEN), and committ
 - **Tests:** `tests/Feature/AnalyticsChartsTest.php` (+4): linked-collapse, name fallback, Unlinked
   bucket, count accuracy.
 
+### Phase 4 — Supervisor Account Provisioning, Mapping & Backfill  · commits `c20cdef`→`adb28ab`
+- **Objective:** give coordinators the tools to create supervisor accounts and map every unlinked
+  `supervisor_name` to a real account; fix all write paths to set `supervisor_id`; provide a
+  re-runnable backfill command for existing rows.
+- **Tasks completed:**
+  - **Task 1** (`c20cdef`) — `FypProjectFactory::forSupervisor()` state for terse linking tests.
+  - **Tasks 2–3** (`d1094fc`, `29762cd`) — coordinator "Create Supervisor" modal: role forced `supervisor`, `is_active=true`, unique email, show-once temp password stored hashed.
+  - **Tasks 4–5** (`6d9fc59`, `58753a1`) — Unlinked Supervisors panel: lists every distinct unlinked `supervisor_name` with student/pair counts; "Link to existing" maps a raw name to an account (whole-pair write, confirm-before-apply, coordinator-only).
+  - **Task 5.5** (`be91da0`) — coordinator-provisioned accounts marked `email_verified_at` immediately.
+  - **Task 6** (`d6a9c72`) — `saveReassign` rewritten to update the whole pair (`semester` + `pair_number`) and set both `supervisor_id` and canonical `supervisor_name`; unpaired rows treated as pair-of-one.
+  - **Task 7** (`f78e086`) — CSV import sets `supervisor_id` on exact name match; key omitted (not null) on no-match so hand-curated links survive re-import.
+  - **Task 8** (`adb28ab`) — `php artisan fyp:link-supervisors`: single-query exact-match backfill, role-filtered, idempotent (`whereNull` guard), prints linked / unmatched names / remaining count.
+- **Tests added:** `SupervisorProvisioningTest` (+8), `SupervisorLinkingTest` (+10), `UserManagementTest` (+2), `CsvImportSupervisorLinkTest` (+3), `LinkSupervisorsCommandTest` (+4) = **+27 tests**.
+- **Backfill baseline (live DB, 2026-06-19):** `fyp:link-supervisors` linked **5 rows** on first run; **137 rows remain unlinked** across **24 unmatched supervisor names** (all in messy CSV format). Coordinator must provision accounts for those 24 names, then re-run the command.
+
 ---
 
 ## Test Status
 
-- **Full Pest suite: 137 passing (328 assertions).** Latest run 2026-06-19; green including Phase 4
-  Task 8 (`LinkSupervisorsCommandTest` +4).
-- Test database is in-memory SQLite (`phpunit.xml` → `DB_DATABASE=:memory:`), so the suite never
-  touches the live database.
-- Sprint 4 added 25 tests across `CsvImportEncodingTest`, `SupervisorRelationTest`,
-  `SupervisorIdentityTest`, `SupervisorStudentLogbookTest`, `AnalyticsChartsTest`,
-  `UserManagementTest`, `CsvImportSupervisorLinkTest`, and `LinkSupervisorsCommandTest`.
+- **Full Pest suite: 137 passing (328 assertions).** Verified 2026-06-19 (Phase 4 Task 9 sign-off); all green, no existing test removed or weakened.
+- Test database is in-memory SQLite (`phpunit.xml` → `DB_DATABASE=:memory:`), so the suite never touches the live database.
+- Sprint 4 total: **+37 tests** spanning `CsvImportEncodingTest`, `SupervisorRelationTest`, `SupervisorIdentityTest`, `SupervisorStudentLogbookTest`, `AnalyticsChartsTest`, `UserManagementTest`, `CsvImportSupervisorLinkTest`, `LinkSupervisorsCommandTest`, and `SupervisorLinkingTest` / `SupervisorProvisioningTest`.
 
 ---
 
@@ -133,21 +144,14 @@ All phases below are implemented, test-covered (TDD: RED → GREEN), and committ
   ID precedence is mandatory — a row owned by another supervisor must never surface through a
   coincidental name match; the name branch applies only to unlinked (`supervisor_id IS NULL`) rows.
 - **Analytics** group by the effective key (linked user name → `supervisor_name` → "Unlinked").
-- **Reads are migrated; writes are not.** CSV import and supervisor reassignment still write
-  `supervisor_name` only — `supervisor_id` is not yet populated by any write path.
-- **Measurability / retirement metric:** `FypProject::whereNull('supervisor_id')->count()` is the
-  remaining fallback surface. When it reaches 0, the name fallback is provably dead and removable.
+- **Reads, writes, and backfill are all migrated.** CSV import, reassignment, and the curation panel all set `supervisor_id`. The backfill command links existing rows on exact match.
+- **Measurability / retirement metric:** `FypProject::whereNull('supervisor_id')->count()` is the remaining fallback surface. **Baseline (2026-06-19): 137 rows.** Phase 5 retirement criterion: when this count reaches **0** after coordinator provisioning + backfill, the dual-read name fallback is provably dead and can be removed.
 
 ---
 
 ## Known Technical Debt
 
-- **`supervisor_id` is unpopulated on existing data.** Practically all rows have
-  `supervisor_id = null`, so production reads still flow through the name fallback until Phase 4
-  backfill. The new ID path is proven by tests but not yet exercised by live data.
-- **Supervisor accounts are missing.** Investigation found ~24 distinct supervisor people in the data
-  but only **1** supervisor user account. Backfill is only meaningful once coordinator-created
-  accounts exist.
+- **137 rows remain unlinked (live DB baseline, 2026-06-19).** The backfill command ran and linked 5 rows on first run; 24 unmatched names (all messy CSV-format strings) remain. Coordinator must provision those accounts via the "Create Supervisor" modal, then re-run `php artisan fyp:link-supervisors`, then use the Unlinked Supervisors panel for any residual non-exact names.
 - **~~CSV import write path~~** — **fixed (Task 7, 2026-06-19).** Import now sets `supervisor_id` on exact name match; omits the key (never sets null) on no-match so hand-curated links survive re-import.
 - **~~Backfill gap~~** — **addressed (Task 8, 2026-06-19).** `php artisan fyp:link-supervisors` links all existing rows by exact name match, ignores non-supervisor accounts, is idempotent, and reports linked / unmatched / remaining counts. Run this against the live DB after coordinator provisions the missing accounts.
 - **~~Reassign partner-row bug~~** — **fixed (Task 6, 2026-06-19).** `saveReassign` now writes the
@@ -161,30 +165,23 @@ All phases below are implemented, test-covered (TDD: RED → GREEN), and committ
 
 ---
 
-## Next Planned Work — Sprint 4 Phase 4: Supervisor Account Provisioning, Mapping & Backfill
+## Next Planned Work — Sprint 4 Phase 5: Dual-Read Retirement
 
-> Planning only — **not implemented**. Full plan:
-> `docs/superpowers/plans/2026-06-15-sprint-4-phase-4-provisioning-mapping-backfill.md`.
+**Trigger condition:** `FypProject::whereNull('supervisor_id')->count()` = 0 (currently 137).
 
-**Objective.** Close the provisioning gap and populate `supervisor_id` on existing `fyp_projects`
-rows so the structural FK becomes the real source of truth and the dual-read name fallback can be
-retired in Phase 5.
+**Prerequisite steps (coordinator, outside the codebase):**
+1. Use the **Create Supervisor** modal to provision accounts for the 24 unmatched names.
+2. Run `php artisan fyp:link-supervisors` — links all exact-name matches automatically.
+3. Use the **Unlinked Supervisors** panel to curate any residual non-exact names.
+4. Repeat step 2 until the remaining count is 0.
 
-**Scope (planned, not built yet):**
-- Coordinator **creates** the missing supervisor user accounts (today only 1 exists) — role forced
-  `supervisor`, show-once temp password, dedup by email. No CSV auto-create.
-- **Unlinked Supervisors** panel maps each distinct unlinked `supervisor_name` to an account via
-  coordinator-curated **"Link to existing"** / **"Create & link"** — exact-match only, no fuzzy
-  resolver, confirm-before-apply.
-- One re-runnable `php artisan fyp:link-supervisors` backfill **auto-links only exact matches**
-  (`supervisor_name === users.name`) and reports the rest.
-- Switch write paths — CSV import and Reassign both set `supervisor_id`; Reassign is fixed to write
-  the **whole pair**, not a single student row.
-- Track progress with `FypProject::whereNull('supervisor_id')->count()` trending toward 0.
+**Phase 5 scope (once count = 0):**
+- Remove the `OR (supervisor_id IS NULL AND supervisor_name = …)` name-fallback branch from `my-students.blade.php` and `supervisor-student-logbook.blade.php`.
+- Simplify analytics to group by `supervisor_id` only (drop the effective-key helper).
+- Add a migration to drop the fallback from any index or constraint if applicable.
+- Final test pass; mark Sprint 4 complete.
 
-**Deferred from this phase (documented in the plan):** force-password-reset flag (needs a migration),
-and the actual removal of the dual-read fallback (Phase 5, gated on the null-count metric reaching 0).
-No live-database operation runs until Phase 4 is explicitly approved.
+**Deferred to backlog:** force-password-reset flag (needs a `users` migration); coordinator role drift (`admin` alias).
 
 ---
 
@@ -208,4 +205,4 @@ Planned, not started — summarized for direction:
 
 ## Last Updated
 
-19 June 2026 — Phase 4 Tasks 6–8 complete: reassign per-pair + supervisor_id; CSV import exact-match linking; `fyp:link-supervisors` backfill command (137 tests / 328 assertions). Task 9 (final verification) pending.
+19 June 2026 — Sprint 4 Phase 4 complete (Task 9 sign-off). 137 tests / 328 assertions, all green. Live-DB baseline: 137 rows unlinked, 24 unmatched names. Phase 5 retirement gated on null-count reaching 0.
