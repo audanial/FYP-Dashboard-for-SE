@@ -31,7 +31,7 @@ their own logbook.
 | | |
 |---|---|
 | **Current sprint** | Sprint 4 — Supervisor Identity |
-| **Current phase** | **Phase 4 — Supervisor Account Provisioning, Mapping & Backfill** ✅ complete (`c20cdef`→`adb28ab`). Phase 5 (dual-read retirement) is next. |
+| **Current phase** | Phase 4 ✅ complete. Three post-Phase-4 items also shipped 2026-06-22: coordinator role-drift fix, `forSupervisor()` query scope, and Supervisor Dashboard. Phase 5 (dual-read retirement) is next. |
 | **Current branch** | `claude/laravel-fyp-dashboard-ot8rR` |
 | **Working tree** | Clean except an incidental `.claude/settings.local.json` (harness permissions; not application code). |
 
@@ -121,13 +121,38 @@ All phases below are implemented, test-covered (TDD: RED → GREEN), and committ
 - **Tests added:** `SupervisorProvisioningTest` (+8), `SupervisorLinkingTest` (+10), `UserManagementTest` (+2), `CsvImportSupervisorLinkTest` (+3), `LinkSupervisorsCommandTest` (+4) = **+27 tests**.
 - **Backfill baseline (live DB, 2026-06-19):** `fyp:link-supervisors` linked **5 rows** on first run; **137 rows remain unlinked** across **24 unmatched supervisor names** (all in messy CSV format). Coordinator must provision accounts for those 24 names, then re-run the command.
 
+### Post-Phase-4 Fixes & Enhancements  · 2026-06-22
+
+#### Coordinator Role Drift — bugfix
+- **Problem:** `CreateNewUser.php` and `DatabaseSeeder.php` both wrote `role = 'admin'` when creating
+  coordinator accounts, while middleware checks `hasRole('coordinator')`. Previously listed as latent
+  technical debt.
+- **Fix:** both files corrected to write `'coordinator'`. Fixed with TDD (RED → GREEN).
+- **Tests:** 2 new tests added; 1 existing test corrected (it had been asserting the wrong value). **Running total: 139.**
+
+#### `forSupervisor()` Query Scope — refactor
+- **Problem:** the dual-read predicate was copy-pasted identically in `my-students.blade.php` and
+  `supervisor-student-logbook.blade.php` — a security-critical predicate with no single source of truth.
+- **Fix:** extracted into `FypProject::forSupervisor(User $user)` Eloquent query scope; both call-sites
+  updated to use it. Logic is unchanged.
+- **Tests:** +3 tests in a new scope-specific test class. **Running total: 142.**
+
+#### Supervisor Dashboard — new feature
+- **What shipped:**
+  - Dedicated `supervisor.dashboard` route and Livewire Volt component.
+  - Reusable `supervisor-overview` panel (assigned student count, needs-attention count, compact
+    student list with last logbook date) embedded on the shared `/dashboard` behind a `hasRole('supervisor')`
+    guard.
+  - Coordinators and students see no change on the shared dashboard.
+- **Tests:** +19 tests. **Running total: 161 passing, 328+ assertions.**
+
 ---
 
 ## Test Status
 
-- **Full Pest suite: 137 passing (328 assertions).** Verified 2026-06-19 (Phase 4 Task 9 sign-off); all green, no existing test removed or weakened.
+- **Full Pest suite: 161 passing (328+ assertions).** Verified 2026-06-22; all green, no existing test removed or weakened.
 - Test database is in-memory SQLite (`phpunit.xml` → `DB_DATABASE=:memory:`), so the suite never touches the live database.
-- Sprint 4 total: **+37 tests** spanning `CsvImportEncodingTest`, `SupervisorRelationTest`, `SupervisorIdentityTest`, `SupervisorStudentLogbookTest`, `AnalyticsChartsTest`, `UserManagementTest`, `CsvImportSupervisorLinkTest`, `LinkSupervisorsCommandTest`, and `SupervisorLinkingTest` / `SupervisorProvisioningTest`.
+- Sprint 4 total (through 2026-06-22): **+61 tests** spanning `CsvImportEncodingTest`, `SupervisorRelationTest`, `SupervisorIdentityTest`, `SupervisorStudentLogbookTest`, `AnalyticsChartsTest`, `UserManagementTest`, `CsvImportSupervisorLinkTest`, `LinkSupervisorsCommandTest`, `SupervisorLinkingTest`, `SupervisorProvisioningTest`, plus the role-drift fix, `forSupervisor()` scope, and Supervisor Dashboard tests.
 
 ---
 
@@ -136,7 +161,8 @@ All phases below are implemented, test-covered (TDD: RED → GREEN), and committ
 - **Schema:** `fyp_projects.supervisor_id` — nullable FK → `users.id` (`nullOnDelete`). The legacy
   `supervisor_name` string is retained for display and as the transition fallback.
 - **Relations:** `FypProject::supervisor()` (belongsTo), `User::supervisedProjects()` (hasMany).
-- **Dual-read predicate** (used by My Students and the logbook gate):
+- **Dual-read predicate** — encapsulated in `FypProject::forSupervisor(User $user)` query scope
+  (extracted 2026-06-22; both My Students and the logbook gate call this scope):
   ```
   supervisor_id = Auth::id()
      OR ( supervisor_id IS NULL AND supervisor_name = Auth::user()->name )
@@ -156,9 +182,7 @@ All phases below are implemented, test-covered (TDD: RED → GREEN), and committ
 - **~~Backfill gap~~** — **addressed (Task 8, 2026-06-19).** `php artisan fyp:link-supervisors` links all existing rows by exact name match, ignores non-supervisor accounts, is idempotent, and reports linked / unmatched / remaining counts. Run this against the live DB after coordinator provisions the missing accounts.
 - **~~Reassign partner-row bug~~** — **fixed (Task 6, 2026-06-19).** `saveReassign` now writes the
   whole pair (`supervisor_id` + canonical `supervisor_name`); unpaired rows treated as pair-of-one.
-- **Coordinator role drift (deferred to backlog):** some creation paths store coordinators as
-  `role = 'admin'` while middleware checks `hasRole('coordinator')`. Currently dormant (the live
-  coordinator is `'coordinator'`), but latent.
+- **~~Coordinator role drift~~** — **fixed (2026-06-22).** `CreateNewUser.php` and `DatabaseSeeder.php` now write `'coordinator'`; 2 new tests added, 1 pre-existing test corrected.
 - **Dual-read masks failures:** the ID branch and the name branch look identical to a user; rely on
   the null-`supervisor_id` count metric to know the true link state.
 - **"Unlinked" is a new visible analytics label** (replaces "Unknown").
@@ -176,7 +200,7 @@ All phases below are implemented, test-covered (TDD: RED → GREEN), and committ
 4. Repeat step 2 until the remaining count is 0.
 
 **Phase 5 scope (once count = 0):**
-- Remove the `OR (supervisor_id IS NULL AND supervisor_name = …)` name-fallback branch from `my-students.blade.php` and `supervisor-student-logbook.blade.php`.
+- Remove the name-fallback branch from `FypProject::forSupervisor()` (and the OR clause in the scope); both call-sites (`my-students.blade.php`, `supervisor-student-logbook.blade.php`) inherit the change automatically.
 - Simplify analytics to group by `supervisor_id` only (drop the effective-key helper).
 - Add a migration to drop the fallback from any index or constraint if applicable.
 - Final test pass; mark Sprint 4 complete.
@@ -191,7 +215,7 @@ Planned, not started — summarized for direction:
 
 - **Sprint 5 — Role-Based Experience.** Tailor each role's landing experience:
   - **Coordinator Dashboard** — cohort overview, import/curation entry points, analytics.
-  - **Supervisor Dashboard** — assigned students, logbook activity at a glance.
+  - **Supervisor Dashboard** — ✅ shipped 2026-06-22 (dedicated route + component; supervisor-overview panel on shared `/dashboard` with role guard).
   - **Student Dashboard** — own project and logbook progress.
 - **Notifications** — surface relevant events to each role.
 - **UI/UX Refinement** — consistency and usability pass across views.
@@ -205,4 +229,4 @@ Planned, not started — summarized for direction:
 
 ## Last Updated
 
-19 June 2026 — Sprint 4 Phase 4 complete (Task 9 sign-off). 137 tests / 328 assertions, all green. Live-DB baseline: 137 rows unlinked, 24 unmatched names. Phase 5 retirement gated on null-count reaching 0.
+22 June 2026 — Coordinator role-drift bug fixed (TDD), dual-read predicate extracted into `FypProject::forSupervisor()` scope, Supervisor Dashboard shipped. **161 tests / 328+ assertions**, all green. Live-DB baseline unchanged: 137 rows unlinked, 24 unmatched names. Phase 5 retirement gated on null-count reaching 0.

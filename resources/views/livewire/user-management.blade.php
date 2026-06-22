@@ -616,7 +616,7 @@ $confirmLink = function () {
                                 class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400">
                             <option value="student">student</option>
                             <option value="supervisor">supervisor</option>
-                            <option value="coordinator">coordinator</option>
+                            <option value="coordinator">FYP Coordinator</option>
                         </select>
                         @error('editRole') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>
