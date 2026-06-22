@@ -104,6 +104,11 @@
 
         </div>
 
+        {{-- ── Supervisor panel (visible only to supervisors) ─────────────── --}}
+        @if ($user->hasRole('supervisor'))
+            <livewire:supervisor-overview />
+        @endif
+
         {{-- ── Analytics section ────────────────────────────────────────────── --}}
         <div class="flex flex-col gap-4">
             <div class="flex items-center gap-3">

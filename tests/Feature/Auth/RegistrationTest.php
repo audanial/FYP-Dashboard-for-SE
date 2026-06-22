@@ -30,10 +30,10 @@ test('new users can register', function () {
     expect(User::query()->where('email', 'test@example.com')->first()?->role)->toBe('student');
 });
 
-test('staff access code creates an admin account case insensitively', function () {
+test('staff access code creates a coordinator account case insensitively', function () {
     $response = $this->post(route('register.store'), [
-        'name' => 'Admin User',
-        'email' => 'admin@example.com',
+        'name' => 'Coordinator User',
+        'email' => 'coordinator@example.com',
         'staff_access_code' => 'se-pc-2026',
         'password' => 'password',
         'password_confirmation' => 'password',
@@ -42,7 +42,7 @@ test('staff access code creates an admin account case insensitively', function (
     $response->assertSessionHasNoErrors()
         ->assertRedirect(route('dashboard', absolute: false));
 
-    expect(User::query()->where('email', 'admin@example.com')->first()?->role)->toBe('admin');
+    expect(User::query()->where('email', 'coordinator@example.com')->first()?->role)->toBe('coordinator');
 });
 
 test('staff access code creates a supervisor account case insensitively', function () {

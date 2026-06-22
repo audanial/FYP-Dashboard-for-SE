@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Amir Coordinator',
                 'username' => 'pc_unikl',
                 'password' => bcrypt('password'),
-                'role' => 'admin',
+                'role' => 'coordinator',
             ],
         );
 

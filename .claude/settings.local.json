@@ -52,7 +52,8 @@
       "Bash(./vendor/bin/pest tests/Feature/SupervisorLinkingTest.php)",
       "PowerShell(php ./vendor/bin/pest tests/Feature/SupervisorLinkingTest.php)",
       "PowerShell(php ./vendor/bin/pest 2>&1 | Select-Object -Last 12)",
-      "PowerShell(cd \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\" ; Get-ChildItem database\\\\migrations | Where-Object { $_.Name -match \"user\" } | Select-Object Name | Sort-Object Name)"
+      "PowerShell(cd \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\" ; Get-ChildItem database\\\\migrations | Where-Object { $_.Name -match \"user\" } | Select-Object Name | Sort-Object Name)",
+      "Bash(./vendor/bin/pest tests/Feature/UserManagementTest.php --filter \"reassign\")"
     ]
   }
 }

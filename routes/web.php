@@ -26,6 +26,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:coordinator,supervisor,student')
         ->name('dashboard');
 
+    Volt::route('supervisor/dashboard', 'supervisor-dashboard')
+        ->middleware('role:supervisor')
+        ->name('supervisor.dashboard');
+
     Route::get('student/logbook', function () {
         $container = Container::getInstance();
 

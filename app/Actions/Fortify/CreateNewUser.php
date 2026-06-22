@@ -38,7 +38,7 @@ class CreateNewUser implements CreatesNewUsers
     protected function resolveRole(?string $staffAccessCode): string
     {
         return match (Str::upper(trim((string) $staffAccessCode))) {
-            'SE-PC-2026' => 'admin',
+            'SE-PC-2026' => 'coordinator',
             'SE-SV-2026' => 'supervisor',
             default => 'student',
         };
