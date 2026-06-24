@@ -64,7 +64,7 @@
 
             {{-- FYP 1 --}}
             <div class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">FYP 1 — SRS &amp; STP</p>
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">FYP 1</p>
                 <div class="mt-3 flex items-end justify-between">
                     <div>
                         <p class="text-4xl font-bold text-gray-900">{{ $currentFyp1 }}</p>
@@ -84,7 +84,7 @@
 
             {{-- FYP 2 --}}
             <div class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">FYP 2 — Final Submission</p>
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">FYP 2</p>
                 <div class="mt-3 flex items-end justify-between">
                     <div>
                         <p class="text-4xl font-bold text-gray-900">{{ $currentFyp2 }}</p>
