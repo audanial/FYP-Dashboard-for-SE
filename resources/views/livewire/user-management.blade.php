@@ -3,8 +3,6 @@
 use App\Models\FypProject;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use function Livewire\Volt\{state, computed};
 
 state([
@@ -31,18 +29,6 @@ state([
     'showDeleteModal' => false,
     'deleteUserId'    => null,
     'deleteUserName'  => '',
-
-    // Create supervisor modal
-    'showCreateModal' => false,
-    'newName'         => '',
-    'newEmail'        => '',
-    'newDepartment'   => '',
-    'newTempPassword' => null,
-
-    // Link unlinked-name modal
-    'showLinkModal'   => false,
-    'linkRawName'     => '',
-    'linkTargetSupId' => '',
 ]);
 
 $filteredUsers = computed(function () {
@@ -63,23 +49,6 @@ $stats = computed(fn() => [
 ]);
 
 $supervisors = computed(fn() => User::where('role', 'supervisor')->orderBy('name')->get());
-
-$unlinkedSupervisors = computed(function () {
-    return FypProject::query()
-        ->whereNull('supervisor_id')
-        ->whereNotNull('supervisor_name')
-        ->where('supervisor_name', '!=', '')
-        ->selectRaw('supervisor_name, COUNT(*) as student_count, COUNT(DISTINCT pair_number) as pair_count')
-        ->groupBy('supervisor_name')
-        ->orderBy('supervisor_name')
-        ->get()
-        ->map(fn ($r) => [
-            'supervisor_name' => $r->supervisor_name,
-            'student_count'   => (int) $r->student_count,
-            'pair_count'      => (int) $r->pair_count,
-        ])
-        ->all();
-});
 
 // ── Edit modal ───────────────────────────────────────────────────────────────
 
@@ -199,75 +168,6 @@ $deleteUser = function () {
     session()->flash('message', 'User removed successfully!');
 };
 
-// ── Create supervisor modal ───────────────────────────────────────────────────
-
-$openCreateModal = function () {
-    abort_unless(Auth::user()?->role === 'coordinator', 403);
-    $this->newName        = '';
-    $this->newEmail       = '';
-    $this->newDepartment  = '';
-    $this->newTempPassword = null;
-    $this->showCreateModal = true;
-};
-
-$createSupervisor = function () {
-    abort_unless(Auth::user()?->role === 'coordinator', 403);
-
-    $this->validate([
-        'newName'       => 'required|string|max:255',
-        'newEmail'      => 'required|email|unique:users,email',
-        'newDepartment' => 'nullable|string|max:255',
-    ]);
-
-    $temp = Str::password(16);
-
-    $supervisor = User::create([
-        'name'       => $this->newName,
-        'email'      => $this->newEmail,
-        'role'       => 'supervisor',
-        'is_active'  => true,
-        'department' => $this->newDepartment ?: null,
-        'password'   => Hash::make($temp),
-    ]);
-
-    // Coordinator vouches for this address — mark verified immediately.
-    // email_verified_at is not fillable (guards against user-supplied input),
-    // so we set it via direct assignment after creation.
-    $supervisor->email_verified_at = now();
-    $supervisor->save();
-
-    // Surfaced once via state; never written to session/logs.
-    $this->newTempPassword = $temp;
-    session()->flash('message', 'Supervisor account created.');
-};
-
-// ── Link unlinked-name modal ──────────────────────────────────────────────────
-
-$openLinkModal = function (string $rawName) {
-    abort_unless(Auth::user()?->role === 'coordinator', 403);
-    $this->linkRawName     = $rawName;
-    $this->linkTargetSupId = '';
-    $this->showLinkModal   = true;
-};
-
-$confirmLink = function () {
-    abort_unless(Auth::user()?->role === 'coordinator', 403);
-
-    $this->validate([
-        'linkRawName'     => 'required|string',
-        'linkTargetSupId' => ['required', \Illuminate\Validation\Rule::exists('users', 'id')->where('role', 'supervisor')],
-    ]);
-
-    // Provenance preserved: supervisor_name is not rewritten on a link.
-    // Name-equality covers both pair members (they share the same imported string).
-    FypProject::where('supervisor_name', $this->linkRawName)
-        ->whereNull('supervisor_id')
-        ->update(['supervisor_id' => (int) $this->linkTargetSupId]);
-
-    $this->showLinkModal = false;
-    session()->flash('message', 'Supervisor linked successfully.');
-};
-
 ?>
 
 <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -280,11 +180,6 @@ $confirmLink = function () {
                 <p class="mt-1 text-sm text-gray-500">View and manage all registered users in the FYP system.</p>
             </div>
             <div class="flex items-center gap-3">
-                <button wire:click="openCreateModal"
-                        type="button"
-                        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
-                    + Create supervisor
-                </button>
                 <div class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
                     <span class="inline-block h-2 w-2 rounded-full bg-green-500"></span>
                     <span class="text-xs font-medium text-gray-600">FYP Coordinator</span>
@@ -369,36 +264,6 @@ $confirmLink = function () {
         </div>
 
     </div>
-
-    {{-- ② UNLINKED SUPERVISORS PANEL --}}
-    @if(count($this->unlinkedSupervisors) > 0)
-    <div class="border-b border-gray-100 px-6 py-5">
-        <div class="flex items-center gap-2">
-            <h2 class="text-sm font-semibold text-gray-900">Unlinked supervisors</h2>
-            <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                {{ count($this->unlinkedSupervisors) }}
-            </span>
-        </div>
-        <p class="mt-1 text-xs text-gray-500">Names imported from CSV that are not yet linked to an account. Linking writes supervisor_id for the whole pair.</p>
-        <div class="mt-3 divide-y divide-gray-50 rounded-lg border border-gray-200">
-            @foreach($this->unlinkedSupervisors as $u)
-                <div class="flex items-center justify-between px-4 py-2.5">
-                    <div>
-                        <span class="text-sm font-medium text-gray-800">{{ $u['supervisor_name'] }}</span>
-                        <span class="ml-2 text-xs text-gray-400">
-                            {{ $u['student_count'] }} student(s) · {{ $u['pair_count'] }} pair(s)
-                        </span>
-                    </div>
-                    <button wire:click="openLinkModal(@js($u['supervisor_name']))"
-                            type="button"
-                            class="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50">
-                        Link to existing
-                    </button>
-                </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
 
     {{-- ③ FILTER TABS + SEARCH --}}
     <div class="flex flex-col gap-4 border-b border-gray-100 px-6 py-4 md:flex-row md:items-center md:justify-between">
@@ -810,170 +675,6 @@ $confirmLink = function () {
                         type="button"
                         class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-700">
                     Remove
-                </button>
-            </div>
-
-        </div>
-    </div>
-
-    {{-- ④ CREATE SUPERVISOR MODAL --}}
-    <div x-show="$wire.showCreateModal"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-         style="display: none;">
-        <div x-show="$wire.showCreateModal"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 scale-100"
-             x-transition:leave-end="opacity-0 scale-95"
-             @click.stop
-             class="relative w-full max-w-md rounded-xl bg-white shadow-xl">
-
-            {{-- Header --}}
-            <div class="flex items-start justify-between border-b border-gray-100 px-6 py-4">
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-900">Create supervisor account</h2>
-                    <p class="mt-0.5 text-sm text-gray-500">Role is set to supervisor and account is active immediately.</p>
-                </div>
-                <button @click="$wire.set('showCreateModal', false)"
-                        type="button"
-                        class="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            {{-- Body --}}
-            <div class="space-y-4 px-6 py-4">
-
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Full Name</label>
-                    <input wire:model="newName"
-                           type="text"
-                           class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400">
-                    @error('newName') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Email</label>
-                    <input wire:model="newEmail"
-                           type="email"
-                           class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400">
-                    @error('newEmail') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Department / Programme</label>
-                    <input wire:model="newDepartment"
-                           type="text"
-                           class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400">
-                </div>
-
-                @if($newTempPassword)
-                    <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                        <p class="font-semibold">Temporary password (shown once):</p>
-                        <code class="mt-1 block break-all font-mono text-amber-900">{{ $newTempPassword }}</code>
-                        <p class="mt-1 text-xs">Copy it now and share it securely. It will not be shown again.</p>
-                    </div>
-                @endif
-
-            </div>
-
-            {{-- Footer --}}
-            <div class="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
-                <button @click="$wire.set('showCreateModal', false)"
-                        type="button"
-                        class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
-                    Close
-                </button>
-                <button wire:click="createSupervisor"
-                        wire:loading.attr="disabled"
-                        wire:target="createSupervisor"
-                        wire:loading.class="opacity-50 cursor-not-allowed"
-                        type="button"
-                        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
-                    Create account
-                </button>
-            </div>
-
-        </div>
-    </div>
-
-    {{-- ⑤ LINK SUPERVISOR MODAL --}}
-    <div x-show="$wire.showLinkModal"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-         style="display: none;">
-        <div x-show="$wire.showLinkModal"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 scale-100"
-             x-transition:leave-end="opacity-0 scale-95"
-             @click.stop
-             class="relative w-full max-w-md rounded-xl bg-white shadow-xl">
-
-            {{-- Header --}}
-            <div class="flex items-start justify-between border-b border-gray-100 px-6 py-4">
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-900">Link supervisor</h2>
-                    <p class="mt-0.5 text-sm text-gray-500">
-                        Mapping <strong>{{ $linkRawName }}</strong> to an account.
-                        This sets <code>supervisor_id</code> for every student under that name.
-                    </p>
-                </div>
-                <button @click="$wire.set('showLinkModal', false)"
-                        type="button"
-                        class="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            {{-- Body --}}
-            <div class="px-6 py-4">
-                <label class="mb-1 block text-sm font-medium text-gray-700">Supervisor account</label>
-                <select wire:model="linkTargetSupId"
-                        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400">
-                    <option value="">Select supervisor…</option>
-                    @if($showLinkModal)
-                        @foreach($this->supervisors as $sup)
-                            <option value="{{ $sup->id }}">{{ $sup->name }}</option>
-                        @endforeach
-                    @endif
-                </select>
-                @error('linkTargetSupId') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            {{-- Footer --}}
-            <div class="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
-                <button @click="$wire.set('showLinkModal', false)"
-                        type="button"
-                        class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
-                    Cancel
-                </button>
-                <button wire:click="confirmLink"
-                        wire:loading.attr="disabled"
-                        wire:target="confirmLink"
-                        wire:loading.class="opacity-50 cursor-not-allowed"
-                        type="button"
-                        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
-                    Confirm link
                 </button>
             </div>
 
