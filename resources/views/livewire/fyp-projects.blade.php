@@ -256,12 +256,18 @@
                         }
 
                         if ($duplicateMode === 'update') {
-                            FypProject::updateOrCreate(['student_id' => $studentId], $fields);
+                            FypProject::updateOrCreate(
+                                ['student_id' => $studentId, 'semester' => $this->semester, 'fyp_phase' => $this->phase],
+                                $fields,
+                            );
                             $this->importedCount++;
                             continue;
                         }
 
-                        if (FypProject::where('student_id', $studentId)->exists()) {
+                        if (FypProject::where('student_id', $studentId)
+                                ->where('semester', $this->semester)
+                                ->where('fyp_phase', $this->phase)
+                                ->exists()) {
                             if ($duplicateMode === 'strict') {
                                 throw_if(true, \RuntimeException::class, "Duplicate student ID found: {$studentId}. Import cancelled.");
                             }
