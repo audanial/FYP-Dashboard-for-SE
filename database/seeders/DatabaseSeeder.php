@@ -33,5 +33,8 @@ class DatabaseSeeder extends Seeder
                 'role' => 'supervisor',
             ],
         );
+
+        // Seed the full SE lecturer roster (creates supervisor accounts + roster rows).
+        $this->call(SupervisorRosterSeeder::class);
     }
 }
