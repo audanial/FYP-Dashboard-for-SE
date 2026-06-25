@@ -1,5 +1,6 @@
 <?php
 use App\Models\FypProject;
+use App\Models\Supervisor;
 use function Livewire\Volt\{state, computed};
 
 state(['semester' => 'MARCH 2026', 'phase' => 'all']);
@@ -74,13 +75,24 @@ $summaryStats = computed(function () use ($effectiveSupervisorKey) {
 });
 
 $supervisorWorkload = computed(function () use ($effectiveSupervisorKey) {
-    return FypProject::with('supervisor')
+    $workload = FypProject::with('supervisor')
         ->where('semester', $this->semester)
         ->get()
         ->filter(fn($p) => $this->phase === 'all' || $p->fyp_phase === $this->phase)
         ->groupBy($effectiveSupervisorKey)
-        ->map(fn($group) => $group->pluck('pair_number')->filter()->unique()->count())
-        ->sortDesc();
+        ->map(fn($group) => $group->pluck('pair_number')->filter()->unique()->count());
+
+    // Ensure every roster lecturer appears, even with no pairs this term, so the
+    // chart shows the full department instead of only those currently supervising.
+    // The roster's canonical name matches the linked user's name (set at seed),
+    // so a supervising lecturer is not double-counted.
+    foreach (Supervisor::orderBy('name')->pluck('name') as $rosterName) {
+        if (! $workload->has($rosterName)) {
+            $workload[$rosterName] = 0;
+        }
+    }
+
+    return $workload->sortDesc();
 });
 
 $updatedSemester = function () {

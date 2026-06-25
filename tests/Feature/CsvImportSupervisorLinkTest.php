@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\FypProject;
+use App\Models\Supervisor;
 use App\Models\User;
+use App\Support\SupervisorName;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Livewire;
@@ -34,8 +36,17 @@ function runImport(string $csvContent): void
 
 // ── Main feature ──────────────────────────────────────────────────────────────
 
-test('importing a row whose supervisor_name exactly matches a supervisor account sets supervisor_id', function () {
+test('importing a row whose supervisor matches a roster slug sets supervisor_id to the linked user', function () {
+    // Linking is now roster/slug based: the CSV string is normalized and matched
+    // against supervisors.name_slug, resolving to the roster row's user_id.
     $sup = User::factory()->create(['role' => 'supervisor', 'name' => 'Exact Match Sup']);
+    Supervisor::create([
+        'name'      => 'Exact Match Sup',
+        'name_slug' => SupervisorName::slug('Exact Match Sup'),
+        'email'     => 'exact.match@unikl.edu.my',
+        'user_id'   => $sup->id,
+        'confirmed' => true,
+    ]);
 
     runImport(csvRowFor('IMP001', 'Exact Match Sup'));
 

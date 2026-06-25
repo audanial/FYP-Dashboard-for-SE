@@ -1,10 +1,13 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <?php
         use App\Models\FypProject;
+        use App\Models\Supervisor;
         use App\Services\CsvHeaderResolver;
         use App\Support\Encoding;
+        use App\Support\SupervisorName;
         use Illuminate\Support\Facades\Auth;
         use Illuminate\Support\Facades\DB;
+        use Illuminate\Support\Facades\Log;
         use function Livewire\Volt\{state, computed, usesFileUploads, usesPagination, updated};
 
         usesFileUploads();
@@ -172,11 +175,13 @@
                     // Read a mapped cell as a trimmed string ('' when unmapped/missing).
                     $cell = fn (array $row, ?int $i): string => ($i !== null && isset($row[$i])) ? trim($row[$i]) : '';
 
-                    // Build once per import: supervisor name → user id (role=supervisor only).
-                    // Used below to set supervisor_id on exact match. Queried here so the
-                    // lookup is a single query rather than one per row.
-                    $supervisorIdByName = \App\Models\User::where('role', 'supervisor')
-                        ->pluck('id', 'name');
+                    // Build once per import: roster name_slug → linked user id.
+                    // The messy CSV SUPERVISOR string is normalized to a slug and matched
+                    // against this map; a hit sets supervisor_id to the roster row's user_id
+                    // (fyp_projects.supervisor_id references users.id). Only roster rows with
+                    // a login account participate. Single query rather than one per row.
+                    $supervisorUserIdBySlug = Supervisor::whereNotNull('user_id')
+                        ->pluck('user_id', 'name_slug');
 
                     // Carried project metadata. A partner/continuation row whose
                     // Group, title, supervisor, etc. are blank inherits the last
@@ -248,11 +253,21 @@
                             'pair_number'      => $pairNumber,
                         ];
 
-                        // Only set supervisor_id when the CSV name exactly matches a
-                        // supervisor account. Intentionally omitted (not set to null) on
-                        // no-match so that updateOrCreate never overwrites a hand-curated link.
-                        if (isset($supervisorIdByName[$supervisorName])) {
-                            $fields['supervisor_id'] = $supervisorIdByName[$supervisorName];
+                        // Normalize the CSV supervisor string and match it against the
+                        // roster slug map. On a hit, set supervisor_id to the linked user.
+                        // On a miss, log the raw string for curation and leave the key unset
+                        // (never null) so updateOrCreate never clobbers a hand-curated link.
+                        if ($supervisorName !== '') {
+                            $supervisorSlug = SupervisorName::slug($supervisorName);
+
+                            if (isset($supervisorUserIdBySlug[$supervisorSlug])) {
+                                $fields['supervisor_id'] = $supervisorUserIdBySlug[$supervisorSlug];
+                            } else {
+                                Log::info('Unmatched supervisor on FYP import', [
+                                    'raw'  => $supervisorName,
+                                    'slug' => $supervisorSlug,
+                                ]);
+                            }
                         }
 
                         if ($duplicateMode === 'update') {
