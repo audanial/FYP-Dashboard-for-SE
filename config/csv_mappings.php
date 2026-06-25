@@ -74,6 +74,7 @@ return [
         'pair_number' => [
             'pair_number',
             'Group',
+            'Seat',
             'Pair Number',
             'Pair No',
             'Pair',
