@@ -1,6 +1,7 @@
 <?php
 use App\Models\FypProject;
 use App\Models\Supervisor;
+use App\Support\SupervisorName;
 use function Livewire\Volt\{state, computed};
 
 state(['semester' => 'MARCH 2026', 'phase' => 'all']);
@@ -16,11 +17,13 @@ state(['semester' => 'MARCH 2026', 'phase' => 'all']);
  * avoid N+1 queries.
  */
 $effectiveSupervisorKey = function (FypProject $project): string {
-    if ($project->supervisor_id && $project->supervisor) {
-        return $project->supervisor->name;
-    }
+    $name = ($project->supervisor_id && $project->supervisor)
+        ? $project->supervisor->name
+        :($project->supervisor_name ?: 'Unlinked');
 
-    return $project->supervisor_name ?: 'Unlinked';
+    // Collapse title variatns ("Azaliza Zainal - Dr" vs "Azaliza Zainal")
+    // onto one identity slug so each lecturer is counted once.
+    return SupervisorName::slug($name) ?: 'unlinked';
 };
 
 $domainStats = computed(function () {
@@ -60,7 +63,7 @@ $summaryStats = computed(function () use ($effectiveSupervisorKey) {
         ->filter(fn($p) => $this->phase === 'all' || $p->fyp_phase === $this->phase);
 
     $students        = $projects->count();
-    $pairs           = $projects->pluck('pair_number')->filter()->unique()->count();
+    $pairs           = $projects->filter(fn($p) => $p->pair_number)->map(fn($p) => $p->fyp_phase . "#" . $p->pair_number)->unique()->count();
     $industrial      = $projects->filter(fn($p) => (bool) $p->is_ifyp)->count();
     $supervisorCount = $projects->map($effectiveSupervisorKey)->unique()->count();
 
@@ -75,12 +78,18 @@ $summaryStats = computed(function () use ($effectiveSupervisorKey) {
 });
 
 $supervisorWorkload = computed(function () use ($effectiveSupervisorKey) {
+    $displayBySlug = Supervisor::pluck('name', 'name_slug');
+    // slug => canonical roster name, so the chart shows clean labels.
+
     $workload = FypProject::with('supervisor')
         ->where('semester', $this->semester)
         ->get()
         ->filter(fn($p) => $this->phase === 'all' || $p->fyp_phase === $this->phase)
         ->groupBy($effectiveSupervisorKey)
-        ->map(fn($group) => $group->pluck('pair_number')->filter()->unique()->count());
+        ->mapWithKeys(function($group,$slug) use ($displayBySlug) {
+            $label = $displayBySlug[$slug] ?? ($group->first()->supervisor_name ?: 'Unlinked');
+            return [$label => $group->filter(fn($p) => $p->pair_number)->map(fn($p) => $p->fyp_phase . "#" . $p->pair_number)->unique()->count()];
+        });
 
     // Ensure every roster lecturer appears, even with no pairs this term, so the
     // chart shows the full department instead of only those currently supervising.
@@ -202,7 +211,7 @@ $updatedPhase = function () {
     {{-- Supervisor workload chart --}}
     <div class="bg-white rounded-xl border border-neutral-200 p-5 shadow-sm">
         <p class="text-sm font-bold text-gray-600 mb-3">Supervisor Workload Distribution</p>
-        <div class="relative h-80">
+        <div class="relative h-[720px]">
             <canvas id="supervisorChart"></canvas>
         </div>
     </div>
@@ -332,7 +341,7 @@ $updatedPhase = function () {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } }, y: { ticks: { autoSkip: false } } }
             }
         });
     }
