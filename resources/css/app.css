@@ -26,6 +26,32 @@
     --color-accent: var(--color-neutral-800);
     --color-accent-content: var(--color-neutral-800);
     --color-accent-foreground: var(--color-white);
+
+    /* UniKL Brand - Navy */
+    --color-indigo-50: #e8ecf3;
+    --color-indigo-100: #d1d9e7:
+    --color-indigo-200: #a3b3cf;
+    --color-indigo-300: #758db7;
+    --color-indigo-400: #47679f;
+    --color-indigo-500: #243a5e;
+    --color-indigo-600: #1b2a4a;
+    --color-indigo-700: #162240;
+    --color-indigo-800: #111a36;
+    --color-indigo-900: #0c122c;
+    --color-indigo-950: #070c1f;
+
+    /* UniKL Brand — Orange */
+    --color-amber-50: #fef7e8;
+    --color-amber-100: #fdefd1;
+    --color-amber-200: #fbdfa3;
+    --color-amber-300: #f9cf75;
+    --color-amber-400: #f7bf47;
+    --color-amber-500: #f5a623;
+    --color-amber-600: #d4891a;
+    --color-amber-700: #b36c11;
+    --color-amber-800: #924f08;
+    --color-amber-900: #713200;
+    --color-amber-950: #4f1500;
 }
 
 @layer theme {

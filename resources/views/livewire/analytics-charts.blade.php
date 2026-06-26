@@ -259,8 +259,8 @@ $updatedPhase = function () {
                 datasets: [{
                     label: 'Projects',
                     data: d.domainValues,
-                    backgroundColor: 'rgba(99, 102, 241, 0.75)',
-                    borderColor: 'rgba(99, 102, 241, 1)',
+                    backgroundColor: 'rgba(30, 64, 175, 0.75)',
+                    borderColor: 'rgba(30, 64, 175, 1)',
                     borderWidth: 1,
                     borderRadius: 4,
                 }]
@@ -281,11 +281,11 @@ $updatedPhase = function () {
                 datasets: [{
                     data: d.platformValues,
                     backgroundColor: [
-                        'rgba(99, 102, 241, 0.8)',
+                        'rgba(30, 64, 175, 0.8)',
                         'rgba(139, 92, 246, 0.8)',
                         'rgba(59, 130, 246, 0.8)',
                         'rgba(16, 185, 129, 0.8)',
-                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(245, 166, 35, 0.8)',
                         'rgba(239, 68, 68, 0.8)',
                         'rgba(107, 114, 128, 0.8)',
                     ],
@@ -308,8 +308,8 @@ $updatedPhase = function () {
                 datasets: [{
                     data: d.ifypValues,
                     backgroundColor: [
-                        'rgba(245, 158, 11, 0.8)',
-                        'rgba(99, 102, 241, 0.8)',
+                        'rgba(245, 166, 35, 0.8)',
+                        'rgba(30, 64, 175, 0.8)',
                     ],
                     borderWidth: 2,
                 }]
@@ -330,8 +330,8 @@ $updatedPhase = function () {
                 datasets: [{
                     label: 'Pairs',
                     data: d.supervisorValues,
-                    backgroundColor: 'rgba(99, 102, 241, 0.75)',
-                    borderColor: 'rgba(99, 102, 241, 1)',
+                    backgroundColor: 'rgba(30, 64, 175, 0.75)',
+                    borderColor: 'rgba(30, 64, 175, 1)',
                     borderWidth: 1,
                     borderRadius: 4,
                 }]

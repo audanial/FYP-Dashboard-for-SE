@@ -3,18 +3,15 @@
 ])
 
 @if($sidebar)
-    <flux:sidebar.brand name="UniKL FYP" {{ $attributes }}>
+    <flux:sidebar.brand name="Final Year Project" {{ $attributes }}>
         <x-slot name="logo">
-            <div class="text-xl font-black text-indigo-600 tracking-tighter">
-                UniKL
-            </div>
+            <img src="{{ asset ('images/unikl-logo.jpg') }}" alt="UniKL Logo" class="h-9 w-auto">   
         </x-slot>
     </flux:sidebar.brand>
 @else
-    <flux:brand name="UniKL FYP" {{ $attributes }}>
+    <flux:brand name="Final Year Project" {{ $attributes }}>
         <x-slot name="logo">
-            <div class="text-xl font-black text-indigo-600 tracking-tighter">
-                UniKL
+            <img src="{{ asset ('images/unikl-logo.jpg') }}" alt="UniKL Logo" class="h-9 w-auto">   
             </div>
         </x-slot>
     </flux:brand>
