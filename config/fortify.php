@@ -92,6 +92,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Fortify Route Path Overrides
+    |--------------------------------------------------------------------------
+    |
+    | Fortify registers its own auth routes (login, register, password reset,
+    | email verification, password confirmation, etc). These overrides keep
+    | the URIs this app already uses for the ones that differ from Fortify's
+    | defaults, instead of re-declaring duplicate routes elsewhere.
+    |
+    */
+
+    'paths' => [
+        'verification' => [
+            'notice' => 'verify-email',
+        ],
+        'password' => [
+            'confirm' => 'confirm-password',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Fortify Routes Middleware
     |--------------------------------------------------------------------------
     |
