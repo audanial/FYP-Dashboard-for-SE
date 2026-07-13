@@ -23,6 +23,17 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
+        // Program Coordinator (secondary account)
+        User::query()->updateOrCreate(
+            ['email' => 'amir@unikl.edu.my'],
+            [
+                'name' => 'Amir Umar Danial',
+                'username' => 'amir_unikl',
+                'password' => bcrypt('abcd1234'),
+                'role' => 'coordinator',
+            ],
+        );
+
         // Supervisor
         User::query()->updateOrCreate(
             ['email' => 'umar@unikl.edu.my'],
