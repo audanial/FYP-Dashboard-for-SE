@@ -51,6 +51,16 @@ it('filters the table by email search', function () {
         ->assertDontSee('Beta User');
 });
 
+it('filters the table by name search case-insensitively', function () {
+    User::factory()->create(['name' => 'Ahmad Razif', 'role' => 'student']);
+    User::factory()->create(['name' => 'Nurul Ain',   'role' => 'student']);
+
+    Livewire::test('user-management')
+        ->set('search', 'ahmad')
+        ->assertSee('Ahmad Razif')
+        ->assertDontSee('Nurul Ain');
+});
+
 it('filters the table to students only when role tab is student', function () {
     User::factory()->create(['name' => 'Student One',    'role' => 'student']);
     User::factory()->create(['name' => 'Supervisor One', 'role' => 'supervisor']);

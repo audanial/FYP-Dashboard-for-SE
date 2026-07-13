@@ -54,7 +54,9 @@
       "PowerShell(php ./vendor/bin/pest 2>&1 | Select-Object -Last 12)",
       "PowerShell(cd \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\" ; Get-ChildItem database\\\\migrations | Where-Object { $_.Name -match \"user\" } | Select-Object Name | Sort-Object Name)",
       "Bash(./vendor/bin/pest tests/Feature/UserManagementTest.php --filter \"reassign\")",
-      "Bash(./vendor/bin/pest tests/Feature/CleanTitleEncodingTest.php)"
+      "Bash(./vendor/bin/pest tests/Feature/CleanTitleEncodingTest.php)",
+      "PowerShell(cd \"C:\\\\Users\\\\amir umar danial\\\\Herd\\\\fyp-dashboard\"; php artisan migrate:status 2>&1 | Select-String -Pattern \"composite|supervisors_table|pair_number|supervisor_id\"; Write-Output \"---INDEXES on fyp_projects---\"; php artisan tinker --execute=\"foreach\\(DB::select\\(\\\\\"PRAGMA index_list\\('fyp_projects'\\)\\\\\"\\) as `$i\\){ echo `$i->name.' unique='.`$i->unique.PHP_EOL; }\")",
+      "Bash(xargs grep -l \"sidebar\")"
     ]
   }
 }

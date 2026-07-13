@@ -1,0 +1,46 @@
+# Reference only — this is not required to deploy (you can wire up the
+# service and env vars by hand in the Render dashboard instead). If you do
+# use it, Render calls this "Blueprint" deployment: connect the repo and
+# Render reads this file to create the service + database automatically.
+
+databases:
+  - name: fyp-dashboard-db
+    plan: free
+    databaseName: fyp_dashboard
+    user: fyp_dashboard
+
+services:
+  - type: web
+    name: fyp-dashboard
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /up
+    envVars:
+      - key: APP_NAME
+        value: "FYP Dashboard"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        fromService:
+          type: web
+          name: fyp-dashboard
+          property: host
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: fyp-dashboard-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database

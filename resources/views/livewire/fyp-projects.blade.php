@@ -55,13 +55,13 @@
                 ->when($this->domain, fn($q) => $q->where('domain', $this->domain))
                 ->when($this->is_ifyp !== '', fn($q) => $q->where('is_ifyp', $this->is_ifyp))
                 ->where(function($query) {
-                    $query->where('student_name', 'like', '%' . $this->search . '%')
-                        ->orWhere('student_id', 'like', '%' . $this->search . '%')
-                        ->orWhere('title', 'like', '%' . $this->search . '%')
-                        ->orWhere('supervisor_name', 'like', '%' . $this->search . '%')
-                        ->orWhere('assessor_name', 'like', '%' . $this->search . '%')
-                        ->orWhere('domain', 'like', '%' . $this->search . '%')
-                        ->orWhere('application_type', 'like', '%' . $this->search . '%');
+                    $query->whereLike('student_name', '%' . $this->search . '%')
+                        ->orWhereLike('student_id', '%' . $this->search . '%')
+                        ->orWhereLike('title', '%' . $this->search . '%')
+                        ->orWhereLike('supervisor_name', '%' . $this->search . '%')
+                        ->orWhereLike('assessor_name', '%' . $this->search . '%')
+                        ->orWhereLike('domain', '%' . $this->search . '%')
+                        ->orWhereLike('application_type', '%' . $this->search . '%');
 
                     if (stripos('Industrial', $this->search) !== false) {
                         $query->orWhere('is_ifyp', true);

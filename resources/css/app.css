@@ -23,13 +23,13 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
+    --color-accent: #1b2a4a;
+    --color-accent-content: var(--color-white);
     --color-accent-foreground: var(--color-white);
 
     /* UniKL Brand - Navy */
     --color-indigo-50: #e8ecf3;
-    --color-indigo-100: #d1d9e7:
+    --color-indigo-100: #d1d9e7;
     --color-indigo-200: #a3b3cf;
     --color-indigo-300: #758db7;
     --color-indigo-400: #47679f;
@@ -90,3 +90,12 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* Force navy background on active sidebar items (Flux hardcodes bg-white in its template) */
+[data-flux-sidebar-item][data-current] {
+    background-color: #1b2a4a !important;
+    border-color: transparent !important;
+}
+[data-flux-sidebar-item][data-current] svg {
+    color: white !important;
+}

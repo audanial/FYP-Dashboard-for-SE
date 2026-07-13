@@ -21,8 +21,8 @@ $projects = computed(function () {
         ->forSupervisor(Auth::id(), Auth::user()->name)
         ->where(function ($query) {
             $query
-                ->where('student_name', 'like', '%'.$this->search.'%')
-                ->orWhere('student_id', 'like', '%'.$this->search.'%');
+                ->whereLike('student_name', '%'.$this->search.'%')
+                ->orWhereLike('student_id', '%'.$this->search.'%');
         })
         ->orderBy('student_name')
         ->paginate(10);

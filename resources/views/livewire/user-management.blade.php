@@ -35,8 +35,8 @@ $filteredUsers = computed(function () {
     return User::query()
         ->when($this->roleFilter !== 'all', fn($q) => $q->where('role', $this->roleFilter))
         ->when($this->search, fn($q) => $q->where(function ($q) {
-            $q->where('name', 'like', '%' . $this->search . '%')
-              ->orWhere('email', 'like', '%' . $this->search . '%');
+            $q->whereLike('name', '%' . $this->search . '%')
+              ->orWhereLike('email', '%' . $this->search . '%');
         }))
         ->orderBy('name')
         ->get();

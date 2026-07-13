@@ -27,7 +27,7 @@
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-zinc-900">Dashboard</h1>
-                <p class="mt-0.5 text-sm text-zinc-500">FYP Tracking — Bachelor of Software Engineering</p>
+                <p class="mt-0.5 text-sm text-zinc-500">FYP Tracking — UniKL MIIT · Bachelor of Software Engineering</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <span class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-200">

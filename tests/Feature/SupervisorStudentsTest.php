@@ -80,6 +80,25 @@ test('supervisors can search their assigned students by name or student id', fun
         ->assertDontSee('Alice Tan');
 });
 
+test('student search is case-insensitive', function () {
+    $supervisor = User::factory()->create([
+        'role' => 'supervisor',
+        'name' => 'Ts. Tiliza Binti Awang Mat',
+    ]);
+
+    FypProject::factory()->create([
+        'student_name' => 'Alice Tan',
+        'student_id' => '522120000021',
+        'supervisor_name' => 'Ts. Tiliza Binti Awang Mat',
+    ]);
+
+    $this->actingAs($supervisor);
+
+    Livewire::test('my-students')
+        ->set('search', 'alice')
+        ->assertSee('Alice Tan');
+});
+
 test('supervisors see assigned students paginated to ten per page', function () {
     $supervisor = User::factory()->create([
         'role' => 'supervisor',
