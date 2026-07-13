@@ -15,4 +15,8 @@ php artisan storage:link || true
 
 php artisan migrate --force
 
+# TEMPORARY: verifying DatabaseSeeder runs cleanly against production Postgres.
+# Remove this line once the next deploy confirms seeding worked.
+php artisan db:seed --force
+
 exec supervisord -c /etc/supervisor/conf.d/supervisord.conf
