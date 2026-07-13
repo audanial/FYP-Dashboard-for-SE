@@ -31,6 +31,11 @@ COPY vite.config.js ./
 COPY resources ./resources
 COPY public ./public
 
+# resources/css/app.css imports Flux UI's CSS straight out of the Composer
+# package (../../vendor/livewire/flux/dist/flux.css), so vendor/ has to be
+# present before Vite can resolve it.
+COPY --from=vendor /app/vendor ./vendor
+
 RUN npm run build
 
 ############################################
