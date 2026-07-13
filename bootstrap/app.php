@@ -12,6 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Render terminates TLS at its edge and forwards plain HTTP to this
+        // container, which is only reachable through that edge — trust it
+        // so url()/asset()/Request::secure() correctly detect HTTPS.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
         ]);
