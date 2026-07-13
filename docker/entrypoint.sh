@@ -15,9 +15,4 @@ php artisan storage:link || true
 
 php artisan migrate --force
 
-# TEMPORARY: seeding the SE lecturer roster now that SE_Lecturers.csv is
-# tracked in git and present in this build.
-# Remove this line once the next deploy confirms seeding worked.
-php artisan db:seed --force
-
 exec supervisord -c /etc/supervisor/conf.d/supervisord.conf
